@@ -1,0 +1,56 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+@use 'sass:color';
+
+.page {
+  min-height: 100vh;
+  @include flex-center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: $color-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.subtitle {
+  font-size: $font-size-lg;
+  color: $color-text-muted;
+  margin-bottom: $spacing-xl;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: $spacing-lg;
+  max-width: 900px;
+}
+
+.featureCard {
+  @include card;
+  padding: $spacing-xl;
+  text-align: left;
+  transition: transform 0.2s, background 0.2s;
+
+  &:hover:not(.disabled) {
+    transform: translateY(-4px);
+    background: color.adjust($color-surface, $lightness: 5%);
+  }
+
+  h2 {
+    font-size: $font-size-xl;
+    margin-bottom: $spacing-sm;
+  }
+
+  p {
+    color: $color-text-muted;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

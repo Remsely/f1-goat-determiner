@@ -1,0 +1,23 @@
+@use 'variables' as *;
+@use 'reset';
+
+// Глобальные классы
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+.page {
+  padding: $spacing-xl 0;
+}
+
+.page-title {
+  font-size: $font-size-2xl;
+  font-weight: 700;
+  margin-bottom: $spacing-lg;
+}
+
+#root {
+  min-height: 100vh;
+}
