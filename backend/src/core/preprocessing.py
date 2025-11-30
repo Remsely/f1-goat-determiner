@@ -47,6 +47,7 @@ class F1Preprocessor:
             results = results[results["raceId"].isin(race_ids)]
             qualifying = qualifying[qualifying["raceId"].isin(race_ids)]
 
+        # === Поулы из квалификации ===
         poles_by_driver = (
             qualifying[qualifying["position"] == 1]
             .groupby("driverId")
@@ -54,6 +55,7 @@ class F1Preprocessor:
             .reset_index(name="total_poles")
         )
 
+        # === Сила команды по сезонам ===
         year_final_race = races.groupby("year")["raceId"].max().reset_index()
         year_final_race.columns = ["year", "final_raceId"]
 
@@ -66,6 +68,7 @@ class F1Preprocessor:
         )
         team_strength.columns = ["constructorId", "year", "team_position"]
 
+        # === Позиция в чемпионате ===
         final_standings = (
             driver_standings
             .merge(year_final_race, left_on="raceId", right_on="final_raceId")
@@ -113,6 +116,7 @@ class F1Preprocessor:
             .reset_index(name="total_titles")
         )
 
+        # === Объединение результатов гонок ===
         merged = (
             results
             .merge(races[["raceId", "year"]], on="raceId", how="left")
@@ -126,9 +130,11 @@ class F1Preprocessor:
 
         merged = merged[merged["positionOrder"] > 0]
 
+        # Заполняем пропуски в team_position медианой
         median_team_pos = merged["team_position"].median()
         merged["team_position"] = merged["team_position"].fillna(median_team_pos)
 
+        # === Агрегация гоночных показателей ===
         features = (
             merged
             .groupby(["driverId", "driverRef", "forename", "surname", "nationality"])
@@ -144,17 +150,21 @@ class F1Preprocessor:
             .reset_index()
         )
 
+        # Добавляем поулы
         features = features.merge(poles_by_driver, on="driverId", how="left")
         features["total_poles"] = features["total_poles"].fillna(0).astype(int)
 
+        # Добавляем чемпионат и титулы
         features = features.merge(avg_championship, on="driverId", how="left")
         features = features.merge(titles, on="driverId", how="left")
         features = features.merge(career_seasons, on="driverId", how="left")
 
+        # Заполняем пропуски
         features["avg_championship_position_pct"] = features["avg_championship_position_pct"].fillna(0)
         features["total_titles"] = features["total_titles"].fillna(0).astype(int)
         features["career_seasons"] = features["career_seasons"].fillna(1).astype(int)
 
+        # === Относительные показатели ===
         features["win_rate"] = features["total_wins"] / features["total_races"] * 100
         features["podium_rate"] = features["total_podiums"] / features["total_races"] * 100
         features["pole_rate"] = features["total_poles"] / features["total_races"] * 100
@@ -162,12 +172,64 @@ class F1Preprocessor:
         features["performance_vs_team"] = features["avg_team_position"] - features["avg_finish"]
         features["title_rate"] = features["total_titles"] / features["career_seasons"] * 100
 
+        # === Умное заполнение pole_rate ===
+        features = self._smart_fill_pole_rate(features)
+
         features["full_name"] = features["forename"] + " " + features["surname"]
 
         features = features[features["total_races"] >= self.min_races]
 
         self._data = features
         return features
+
+    def _smart_fill_pole_rate(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Умное заполнение pole_rate для пилотов без данных о квалификациях.
+        Вместо 0 — пропорционально win_rate или podium_rate.
+        """
+
+        # Пилоты с поулами
+        has_poles = df["total_poles"] > 0
+
+        if has_poles.sum() < 5:
+            # Недостаточно данных — оставляем как есть
+            return df
+
+        # Пилоты с поулами И победами — находим соотношение
+        with_poles_and_wins = df[has_poles & (df["win_rate"] > 0)].copy()
+
+        if len(with_poles_and_wins) < 3:
+            return df
+
+        with_poles_and_wins["pole_win_ratio"] = (
+                with_poles_and_wins["pole_rate"] / with_poles_and_wins["win_rate"]
+        )
+        avg_pole_win_ratio = with_poles_and_wins["pole_win_ratio"].median()
+
+        # Пилоты с поулами но без побед (только подиумы)
+        with_poles_no_wins = df[has_poles & (df["win_rate"] == 0) & (df["podium_rate"] > 0)]
+        if len(with_poles_no_wins) > 0:
+            podium_pole_ratio = (
+                    with_poles_no_wins["pole_rate"] / with_poles_no_wins["podium_rate"]
+            ).median()
+        else:
+            podium_pole_ratio = 0.
+            2
+
+        # Заполняем для пилотов БЕЗ поулов, но с победами/подиумами
+        no_poles_mask = ~has_poles
+
+        for idx in df[no_poles_mask].index:
+            row = df.loc[idx]
+            if row["win_rate"] > 0:
+                # Есть победы — используем соотношение от побед
+                df.loc[idx, "pole_rate"] = row["win_rate"] * avg_pole_win_ratio
+            elif row["podium_rate"] > 0:
+                # Только подиумы — используем соотношение от подиумов
+                df.loc[idx, "pole_rate"] = row["podium_rate"] * podium_pole_ratio
+            # Если нет ни побед ни подиумов — оставляем 0
+
+        return df
 
     def get_scaled_features(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Возвращает исходные данные и масштабированные признаки."""
