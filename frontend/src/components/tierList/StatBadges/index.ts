@@ -1,0 +1,1 @@
+export {StatBadges} from './StatBadges';

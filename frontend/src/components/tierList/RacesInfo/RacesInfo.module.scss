@@ -1,0 +1,17 @@
+@use '@/styles/variables' as *;
+
+.races {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.separator {
+  opacity: 0.5;
+}
+
+.winRate {
+  color: rgba($color-text, 0.6);
+}

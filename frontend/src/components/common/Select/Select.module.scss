@@ -1,0 +1,32 @@
+@use '@/styles/variables' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.label {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.select {
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  color: $color-text;
+  font-size: $font-size-base;
+  cursor: pointer;
+  min-width: 120px;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+
+  option {
+    background: $color-surface;
+  }
+}

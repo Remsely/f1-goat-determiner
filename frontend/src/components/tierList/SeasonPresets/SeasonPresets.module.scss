@@ -1,0 +1,31 @@
+@use '@/styles/variables' as *;
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.preset {
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  color: $color-text;
+  font-size: $font-size-sm;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: $color-text-muted;
+  }
+
+  &.active {
+    background: $color-primary;
+    border-color: $color-primary;
+  }
+
+  &.custom {
+    border-style: dashed;
+  }
+}

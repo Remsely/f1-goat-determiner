@@ -1,0 +1,28 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.filters {
+  @include card;
+  margin-bottom: $spacing-lg;
+}
+
+.group {
+  margin-bottom: $spacing-md;
+}
+
+.label {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin-bottom: $spacing-sm;
+}
+
+.row {
+  display: flex;
+  gap: $spacing-lg;
+
+  @include tablet {
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+}

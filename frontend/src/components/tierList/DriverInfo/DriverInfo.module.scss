@@ -1,0 +1,20 @@
+@use '@/styles/variables' as *;
+
+.info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nationality {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}

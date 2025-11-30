@@ -1,0 +1,23 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.card {
+  @include flex-between;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: $border-radius-sm;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.statsSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}

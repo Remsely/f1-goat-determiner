@@ -1,0 +1,52 @@
+@use '@/styles/variables' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &[data-type='titles'] {
+    background: linear-gradient(135deg, rgba(#ffd700, 0.2) 0%, rgba(#ffaa00, 0.1) 100%);
+    color: #ffd700;
+    box-shadow: 0 2px 6px rgba(#ffd700, 0.18);
+  }
+
+  &[data-type='wins'] {
+    background: linear-gradient(135deg, rgba(#3b82f6, 0.2) 0%, rgba(#1d4ed8, 0.1) 100%);
+    color: #60a5fa;
+    box-shadow: 0 2px 6px rgba(#3b82f6, 0.18);
+  }
+
+  &[data-type='podiums'] {
+    background: linear-gradient(135deg, rgba(#cd7f32, 0.2) 0%, rgba(#b87333, 0.1) 100%);
+    color: #cd7f32;
+    box-shadow: 0 2px 6px rgba(#cd7f32, 0.18);
+  }
+}
+
+.icon {
+  font-size: 0.85em;
+}
+
+.value {
+  font-weight: 700;
+}
+
+.label {
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.empty {
+  color: $color-text-muted;
+  padding: 3px 8px;
+}

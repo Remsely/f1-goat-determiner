@@ -1,0 +1,19 @@
+@use '@/styles/variables' as *;
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  color: $color-text-muted;
+  padding: $spacing-xs $spacing-sm;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+  transition: all 0.2s;
+
+  &:hover {
+    background: $color-surface;
+    border-color: $color-text-muted;
+    color: $color-text;
+  }
+}

@@ -1,0 +1,64 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.picker {
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $border-radius;
+}
+
+.header {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.actions {
+  display: flex;
+  gap: $spacing-sm;
+
+  button {
+    color: $color-primary-muted;
+    font-size: $font-size-sm;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: $spacing-xs;
+}
+
+.chip {
+  padding: $spacing-xs;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $color-text;
+  }
+
+  &.selected {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-text;
+  }
+}
+
+.count {
+  margin-top: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  text-align: center;
+}

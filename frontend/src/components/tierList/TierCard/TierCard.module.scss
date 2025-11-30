@@ -1,0 +1,110 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.card {
+  @include card;
+  border-left: 4px solid;
+
+  &[data-tier='S'] {
+    border-color: $tier-s;
+
+    .label {
+      background: $tier-s;
+      color: #fff;
+    }
+  }
+
+  &[data-tier='A'] {
+    border-color: $tier-a;
+
+    .label {
+      background: $tier-a;
+      color: #fff;
+    }
+  }
+
+  &[data-tier='B'] {
+    border-color: $tier-b;
+
+    .label {
+      background: $tier-b;
+      color: #fff;
+    }
+  }
+
+  &[data-tier='C'] {
+    border-color: $tier-c;
+
+    .label {
+      background: $tier-c;
+      color: #fff;
+    }
+  }
+
+  &[data-tier='D'] {
+    border-color: $tier-d;
+
+    .label {
+      background: $tier-d;
+      color: #fff;
+    }
+  }
+
+  &[data-tier='F'] {
+    border-color: $tier-f;
+
+    .label {
+      background: $tier-f;
+      color: #fff;
+    }
+  }
+}
+
+.header {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.label {
+  width: 40px;
+  height: 40px;
+  @include flex-center;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xl;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.titleInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-size: $font-size-lg;
+  font-weight: 600;
+}
+
+.stats {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.count {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.drivers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-sm;
+}
