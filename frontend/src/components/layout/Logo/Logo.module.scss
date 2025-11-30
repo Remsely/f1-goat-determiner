@@ -1,0 +1,64 @@
+@use '@/styles/variables' as *;
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  text-decoration: none;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &.sm {
+    .icon {
+      font-size: 1.75rem;
+    }
+
+    .title {
+      font-size: $font-size-lg;
+    }
+  }
+
+  &.md {
+    .icon {
+      font-size: 2rem;
+    }
+
+    .title {
+      font-size: $font-size-xl;
+    }
+  }
+
+  &.lg {
+    gap: $spacing-md;
+
+    .icon {
+      font-size: 3rem;
+    }
+
+    .title {
+      font-size: $font-size-2xl;
+    }
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 8px rgba($color-primary, 0.5));
+  line-height: 1;
+
+  img {
+    height: 1em;
+    width: auto;
+  }
+}
+
+.title {
+  font-weight: 700;
+  color: $color-text;
+  white-space: nowrap;
+}

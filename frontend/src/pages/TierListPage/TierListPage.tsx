@@ -1,5 +1,4 @@
 import {useState} from 'react';
-import {BackLink} from '@/components/common/BackLink/BackLink';
 import {Loader} from '@/components/common/Loader/Loader';
 import {TierListFilters} from '@/components/tierList/TierListFilters/TierListFilters';
 import {TierCard} from '@/components/tierList/TierCard/TierCard';
@@ -39,10 +38,11 @@ export const TierListPage = () => {
     return (
         <div className={styles.page}>
             <div className="container">
-                <BackLink to="/">← Back to Home</BackLink>
-
                 <header className={styles.header}>
                     <h1 className={styles.title}>Tier List</h1>
+                    <p className={styles.description}>
+                        Driver ranking based on K-Means clustering algorithm
+                    </p>
                 </header>
 
                 <TierListFilters

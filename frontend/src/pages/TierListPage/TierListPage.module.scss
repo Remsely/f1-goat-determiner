@@ -3,16 +3,22 @@
 
 .page {
   padding: $spacing-xl 0;
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
 }
 
 .header {
-  margin: $spacing-lg 0;
+  margin-bottom: $spacing-lg;
 }
 
 .title {
   font-size: $font-size-2xl;
   font-weight: 700;
+  margin-bottom: $spacing-xs;
+}
+
+.description {
+  color: $color-text-muted;
+  font-size: $font-size-base;
 }
 
 .infoRow {

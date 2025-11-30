@@ -4,22 +4,74 @@
 
 .page {
   min-height: 100vh;
-  @include flex-center;
+  display: flex;
   flex-direction: column;
+  justify-content: center;
+  padding: $spacing-xl 0;
+}
+
+.hero {
   text-align: center;
+  margin-bottom: $spacing-xl * 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.logoIcon {
+  font-size: 8rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 24px rgba($color-primary, 0.7)) drop-shadow(0 0 48px rgba($color-primary, 0.4));
+
+  @include tablet {
+    font-size: 6rem;
+  }
+
+  img {
+    height: 1em;
+    width: auto;
+  }
 }
 
 .title {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.titleMain {
   font-size: 3rem;
   font-weight: 800;
-  color: $color-primary;
-  margin-bottom: $spacing-sm;
+  color: $color-text;
+  letter-spacing: -1px;
+
+  @include tablet {
+    font-size: 2.5rem;
+  }
+}
+
+.titleAccent {
+  font-size: 3rem;
+  font-weight: 800;
+  color: $color-text;
+  letter-spacing: -1px;
+
+  @include tablet {
+    font-size: 2.5rem;
+  }
 }
 
 .subtitle {
   font-size: $font-size-lg;
   color: $color-text-muted;
-  margin-bottom: $spacing-xl;
+  max-width: 500px;
+
+  @include tablet {
+    font-size: $font-size-base;
+  }
 }
 
 .features {
@@ -27,12 +79,15 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: $spacing-lg;
   max-width: 900px;
+  margin: 0 auto;
 }
 
 .featureCard {
   @include card;
-  padding: $spacing-xl;
-  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  padding: $spacing-lg;
   transition: transform 0.2s, background 0.2s;
 
   &:hover:not(.disabled) {
@@ -40,17 +95,43 @@
     background: color.adjust($color-surface, $lightness: 5%);
   }
 
-  h2 {
-    font-size: $font-size-xl;
-    margin-bottom: $spacing-sm;
-  }
-
-  p {
-    color: $color-text-muted;
-  }
-
   &.disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+.featureIcon {
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  @include flex-center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: $border-radius;
+  flex-shrink: 0;
+}
+
+.featureContent {
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 600;
+    margin-bottom: $spacing-xs;
+  }
+
+  p {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+  }
+}
+
+.footer {
+  text-align: center;
+  margin-top: $spacing-xl * 2;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border;
+
+  p {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
   }
 }
