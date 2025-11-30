@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     def raw_data_dir(self) -> Path:
         return self.base_dir / "data" / "raw"
 
-    api_host: str = "0.0.0. 0"
+    api_host: str = "0.0.0.0"
     api_port: int = 8000
 
 

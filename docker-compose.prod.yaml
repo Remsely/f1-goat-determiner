@@ -1,0 +1,38 @@
+services:
+  backend:
+    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-backend:latest
+    container_name: f1-goat-backend
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - f1-network
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-frontend:latest
+    container_name: f1-goat-frontend
+    volumes:
+      - frontend-static:/static
+    networks:
+      - f1-network
+
+  nginx:
+    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-nginx:latest
+    container_name: f1-goat-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - frontend-static:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - f1-network
+
+volumes:
+  frontend-static:
+
+networks:
+  f1-network:
+    name: f1-goat-network
