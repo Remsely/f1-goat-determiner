@@ -59,10 +59,6 @@ dmypy.json
 # Ruff
 .ruff_cache/
 
-# Data Files (large CSVs)
-backend/data/raw/*.csv
-!backend/data/raw/.gitkeep
-
 # Logs
 *.log
 logs/
