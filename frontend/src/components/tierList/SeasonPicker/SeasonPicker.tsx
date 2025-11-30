@@ -24,7 +24,7 @@ export const SeasonPicker = ({
             <div className={styles.header}>
                 <span>Select seasons:</span>
                 <div className={styles.actions}>
-                    <button onClick={onSelectAll}>Select all</button>
+                    <button onClick={onSelectAll}>Select All</button>
                     <button onClick={onClear}>Clear</button>
                 </div>
             </div>

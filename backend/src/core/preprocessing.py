@@ -10,6 +10,7 @@ class F1Preprocessor:
     FEATURE_COLS = [
         "win_rate",
         "podium_rate",
+        "pole_rate",
         "avg_grid",
         "avg_finish",
         "best_finish",
@@ -25,11 +26,6 @@ class F1Preprocessor:
             seasons: list[int] | None = None,
             min_races: int = 10
     ):
-        """
-        Args:
-            seasons: Список сезонов для фильтрации (None = все)
-            min_races: Минимум гонок для включения пилота
-        """
         self.seasons = seasons
         self.min_races = min_races
         self._loader = get_data_loader()
@@ -43,11 +39,20 @@ class F1Preprocessor:
         drivers = self._loader.drivers().copy()
         driver_standings = self._loader.driver_standings().copy()
         constructor_standings = self._loader.constructor_standings().copy()
+        qualifying = self._loader.qualifying().copy()
 
         if self.seasons:
             races = races[races["year"].isin(self.seasons)]
             race_ids = races["raceId"].tolist()
             results = results[results["raceId"].isin(race_ids)]
+            qualifying = qualifying[qualifying["raceId"].isin(race_ids)]
+
+        poles_by_driver = (
+            qualifying[qualifying["position"] == 1]
+            .groupby("driverId")
+            .size()
+            .reset_index(name="total_poles")
+        )
 
         year_final_race = races.groupby("year")["raceId"].max().reset_index()
         year_final_race.columns = ["year", "final_raceId"]
@@ -61,7 +66,6 @@ class F1Preprocessor:
         )
         team_strength.columns = ["constructorId", "year", "team_position"]
 
-        # === Позиция в чемпионате ===
         final_standings = (
             driver_standings
             .merge(year_final_race, left_on="raceId", right_on="final_raceId")
@@ -140,6 +144,9 @@ class F1Preprocessor:
             .reset_index()
         )
 
+        features = features.merge(poles_by_driver, on="driverId", how="left")
+        features["total_poles"] = features["total_poles"].fillna(0).astype(int)
+
         features = features.merge(avg_championship, on="driverId", how="left")
         features = features.merge(titles, on="driverId", how="left")
         features = features.merge(career_seasons, on="driverId", how="left")
@@ -150,6 +157,7 @@ class F1Preprocessor:
 
         features["win_rate"] = features["total_wins"] / features["total_races"] * 100
         features["podium_rate"] = features["total_podiums"] / features["total_races"] * 100
+        features["pole_rate"] = features["total_poles"] / features["total_races"] * 100
         features["grid_vs_finish"] = features["avg_finish"] - features["avg_grid"]
         features["performance_vs_team"] = features["avg_team_position"] - features["avg_finish"]
         features["title_rate"] = features["total_titles"] / features["career_seasons"] * 100
@@ -162,12 +170,7 @@ class F1Preprocessor:
         return features
 
     def get_scaled_features(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Возвращает исходные данные и масштабированные признаки.
-
-        Returns:
-            (data, scaled_df) — исходные данные и DataFrame с _scaled колонками
-        """
+        """Возвращает исходные данные и масштабированные признаки."""
         if self._data is None:
             self.build_features()
 

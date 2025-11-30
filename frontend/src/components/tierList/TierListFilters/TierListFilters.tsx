@@ -86,13 +86,13 @@ export const TierListFilters = ({
 
             <div className={styles.row}>
                 <Select
-                    label="Number of tiers"
+                    label="Number of Tiers"
                     value={nTiers}
                     options={TIER_OPTIONS}
                     onChange={onNTiersChange}
                 />
                 <Select
-                    label="Minimum races"
+                    label="Minimum Races"
                     value={minRaces}
                     options={MIN_RACES_OPTIONS}
                     onChange={onMinRacesChange}

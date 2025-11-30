@@ -20,16 +20,22 @@ class F1DataLoader:
             )
 
         required_files = [
-            "results.csv", "races.csv", "drivers.csv",
-            "driver_standings.csv", "constructor_standings.csv"
+            "results.csv",
+            "races.csv",
+            "drivers.csv",
+            "driver_standings.csv",
+            "constructor_standings.csv",
+            "qualifying.csv"
         ]
 
         missing = [f for f in required_files if not (self._data_dir / f).exists()]
 
         if missing:
             raise FileNotFoundError(
-                f"No files found: {missing}\n"
-                f"Download data from Kaggle into {self._data_dir}"
+                f"Data files not found: {missing}\n"
+                f"Download in from Kaggle - "
+                f"https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020 "
+                f"and place in {self._data_dir}"
             )
 
     @lru_cache(maxsize=1)
@@ -51,6 +57,10 @@ class F1DataLoader:
     @lru_cache(maxsize=1)
     def constructor_standings(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "constructor_standings.csv")
+
+    @lru_cache(maxsize=1)
+    def qualifying(self) -> pd.DataFrame:
+        return pd.read_csv(self._data_dir / "qualifying.csv")
 
     def get_available_seasons(self) -> list[int]:
         """Список всех сезонов."""

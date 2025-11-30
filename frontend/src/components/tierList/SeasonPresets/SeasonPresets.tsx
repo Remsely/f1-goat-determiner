@@ -7,10 +7,10 @@ export interface Preset {
 }
 
 const PRESETS: Preset[] = [
-    {id: 'all', label: 'All seasons'},
-    {id: 'modern', label: 'Hybrid era (2014+)', filter: (y) => y >= 2014},
-    {id: 'last5', label: 'Last 5 years', filter: (y, curr) => y > curr - 5},
-    {id: 'last10', label: 'Last 10 years', filter: (y, curr) => y > curr - 10},
+    {id: 'all', label: 'All Seasons'},
+    {id: 'modern', label: 'Hybrid Era (2014+)', filter: (y) => y >= 2014},
+    {id: 'last5', label: 'Last 5 Years', filter: (y, curr) => y > curr - 5},
+    {id: 'last10', label: 'Last 10 Years', filter: (y, curr) => y > curr - 10},
     {id: '2020s', label: '2020s', filter: (y) => y >= 2020},
     {id: '2010s', label: '2010s', filter: (y) => y >= 2010 && y < 2020},
     {id: '2000s', label: '2000s', filter: (y) => y >= 2000 && y < 2010},
@@ -62,7 +62,7 @@ export const SeasonPresets = ({
                 className={`${styles.preset} ${styles.custom} ${isCustomActive ? styles.active : ''}`}
                 onClick={onCustomClick}
             >
-                Select seasons...
+                Select Seasons...
             </button>
         </div>
     );

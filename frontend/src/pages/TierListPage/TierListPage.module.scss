@@ -15,19 +15,26 @@
   font-weight: 700;
 }
 
-.meta {
+.infoRow {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
   gap: $spacing-md;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
   margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
 }
 
-.loading {
-  @include flex-center;
-  min-height: 50vh;
+.meta {
+  display: flex;
+  gap: $spacing-sm;
   color: $color-text-muted;
+  font-size: $font-size-sm;
+  flex-wrap: wrap;
+}
+
+.loaderWrapper {
+  @include flex-center;
+  min-height: 40vh;
 }
 
 .error {

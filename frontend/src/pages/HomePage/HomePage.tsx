@@ -7,23 +7,18 @@ export const HomePage = () => {
             <div className="container">
                 <h1 className={styles.title}>F1 GOAT Determiner</h1>
                 <p className={styles.subtitle}>
-                    Определи лучшего пилота Формулы-1 всех времён
+                    Find out who is the greatest Formula 1 driver of all time
                 </p>
 
                 <div className={styles.features}>
                     <Link to="/tier-list" className={styles.featureCard}>
                         <h2>🏆 Tier List</h2>
-                        <p>Кластеризация пилотов по уровню мастерства</p>
+                        <p>Driver clustering by skill level using K-Means algorithm</p>
                     </Link>
 
-                    <div className={styles.featureCard + ' ' + styles.disabled}>
+                    <div className={`${styles.featureCard} ${styles.disabled}`}>
                         <h2>📊 ELO Rating</h2>
-                        <p>Скоро... </p>
-                    </div>
-
-                    <div className={styles.featureCard + ' ' + styles.disabled}>
-                        <h2>🤝 Teammate Battles</h2>
-                        <p>Скоро...</p>
+                        <p>Coming soon...</p>
                     </div>
                 </div>
             </div>

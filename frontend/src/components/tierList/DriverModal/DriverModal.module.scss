@@ -1,0 +1,70 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.driverHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-border;
+}
+
+.nationality {
+  color: $color-text-muted;
+  font-size: $font-size-base;
+}
+
+.badges {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.sectionTitle {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.statsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: $border-radius-sm;
+  overflow: hidden;
+}
+
+.statRow {
+  @include flex-between;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(255, 255, 255, 0.02);
+
+  &:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.statLabel {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.statValue {
+  font-weight: 500;
+  font-size: $font-size-base;
+}

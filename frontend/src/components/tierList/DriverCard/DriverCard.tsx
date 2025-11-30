@@ -6,17 +6,25 @@ import styles from './DriverCard.module.scss';
 
 interface DriverCardProps {
     driver: Driver;
+    onClick?: (driver: Driver) => void;
 }
 
-export const DriverCard = ({driver}: DriverCardProps) => {
+export const DriverCard = ({driver, onClick}: DriverCardProps) => {
     const {name, nationality, stats} = driver;
 
+    const handleClick = () => {
+        onClick?.(driver);
+    };
+
     return (
-        <div className={styles.card}>
+        <div
+            className={`${styles.card} ${onClick ? styles.clickable : ''}`}
+            onClick={handleClick}
+        >
             <DriverInfo name={name} nationality={nationality}/>
 
             <div className={styles.statsSection}>
-                <StatBadges stats={stats}/>
+                <StatBadges stats={stats} compact/>
                 <RacesInfo races={stats.races} winRate={stats.win_rate}/>
             </div>
         </div>

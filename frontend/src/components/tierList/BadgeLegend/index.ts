@@ -1,0 +1,1 @@
+export {BadgeLegend} from './BadgeLegend';

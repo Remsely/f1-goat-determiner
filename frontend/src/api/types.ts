@@ -2,9 +2,11 @@ export interface DriverStats {
     races: number;
     wins: number;
     podiums: number;
+    poles: number;
     titles: number;
     win_rate: number;
     podium_rate: number;
+    pole_rate: number;
     title_rate: number;
     avg_championship_pct: number;
     avg_finish: number;
@@ -22,6 +24,7 @@ export interface Tier {
     count: number;
     avg_win_rate: number;
     avg_podium_rate: number;
+    avg_pole_rate: number;
     avg_finish: number;
     drivers: Driver[];
 }

@@ -14,6 +14,7 @@ class TierListAnalyzer(BaseAnalyzer):
     SCALED_COLS = [
         "win_rate_scaled",
         "podium_rate_scaled",
+        "pole_rate_scaled",  # Добавлено!
         "avg_grid_scaled",
         "avg_finish_scaled",
         "best_finish_scaled",
@@ -76,16 +77,18 @@ class TierListAnalyzer(BaseAnalyzer):
             .agg({
                 "win_rate": "mean",
                 "podium_rate": "mean",
+                "pole_rate": "mean",
                 "avg_championship_position_pct": "mean",
                 "avg_finish": "mean",
             })
         )
 
         cluster_quality["composite_score"] = (
-                cluster_quality["win_rate"] * 0.3 +
-                cluster_quality["podium_rate"] * 0.2 +
-                cluster_quality["avg_championship_position_pct"] * 0.3 +
-                (20 - cluster_quality["avg_finish"]) * 2  # Инвертируем и масштабируем
+                cluster_quality["win_rate"] * 0.25 +
+                cluster_quality["podium_rate"] * 0.15 +
+                cluster_quality["pole_rate"] * 0.15 +
+                cluster_quality["avg_championship_position_pct"] * 0.25 +
+                (20 - cluster_quality["avg_finish"]) * 2
         )
 
         cluster_quality = cluster_quality.sort_values("composite_score", ascending=False)
@@ -99,13 +102,11 @@ class TierListAnalyzer(BaseAnalyzer):
         self._result_data = full_data
 
         result = self._build_response()
-
         _cache_result(cache_key, result)
 
         return result
 
     def _make_cache_key(self) -> str:
-        """Создаёт ключ для кэша."""
         seasons_str = ",".join(map(str, sorted(self.seasons))) if self.seasons else "all"
         return f"{seasons_str}_{self.n_tiers}_{self.min_races}"
 
@@ -121,8 +122,8 @@ class TierListAnalyzer(BaseAnalyzer):
                 continue
 
             tier_data = tier_data.sort_values(
-                ["win_rate", "podium_rate", "avg_championship_position_pct"],
-                ascending=[False, False, False]
+                ["win_rate", "podium_rate", "pole_rate", "avg_championship_position_pct"],
+                ascending=[False, False, False, False]
             )
 
             drivers = []
@@ -136,9 +137,11 @@ class TierListAnalyzer(BaseAnalyzer):
                         "races": int(row["total_races"]),
                         "wins": int(row["total_wins"]),
                         "podiums": int(row["total_podiums"]),
+                        "poles": int(row["total_poles"]),
                         "titles": int(row["total_titles"]),
                         "win_rate": round(row["win_rate"], 2),
                         "podium_rate": round(row["podium_rate"], 2),
+                        "pole_rate": round(row["pole_rate"], 2),
                         "title_rate": round(row["title_rate"], 2),
                         "avg_championship_pct": round(row["avg_championship_position_pct"], 2),
                         "avg_finish": round(row["avg_finish"], 2),
@@ -149,6 +152,7 @@ class TierListAnalyzer(BaseAnalyzer):
                 "count": len(drivers),
                 "avg_win_rate": round(tier_data["win_rate"].mean(), 2),
                 "avg_podium_rate": round(tier_data["podium_rate"].mean(), 2),
+                "avg_pole_rate": round(tier_data["pole_rate"].mean(), 2),  # Добавлено!
                 "avg_finish": round(tier_data["avg_finish"].mean(), 2),
                 "drivers": drivers
             }
@@ -171,12 +175,10 @@ _CACHE_MAX_SIZE = 100
 
 
 def _get_cached_result(key: str) -> dict | None:
-    """Получает результат из кэша."""
     return _cache.get(key)
 
 
 def _cache_result(key: str, result: dict) -> None:
-    """Сохраняет результат в кэш."""
     if len(_cache) >= _CACHE_MAX_SIZE:
         first_key = next(iter(_cache))
         del _cache[first_key]
@@ -184,5 +186,4 @@ def _cache_result(key: str, result: dict) -> None:
 
 
 def clear_cache() -> None:
-    """Очищает кэш (для тестов)."""
     _cache.clear()

@@ -1,33 +1,22 @@
 @use '@/styles/variables' as *;
 
-.badge {
+.legend {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.item {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 3px 8px;
+  padding: 2px 8px;
   border-radius: 6px;
-  font-size: $font-size-sm;
-  font-weight: 600;
-  transition: transform 0.15s, box-shadow 0.15s;
-  cursor: default;
+  font-size: $font-size-xs;
+  transition: transform 0.15s;
 
   &:hover {
     transform: translateY(-1px);
-  }
-
-  &.compact {
-    padding: 2px 5px;
-    gap: 2px;
-    font-size: $font-size-xs;
-    border-radius: 4px;
-
-    .icon {
-      font-size: 0.85em;
-    }
-
-    .value {
-      font-size: 0.9em;
-    }
   }
 
   &[data-type='titles'] {
@@ -42,16 +31,16 @@
     box-shadow: 0 2px 6px rgba(#3b82f6, 0.18);
   }
 
-  &[data-type='podiums'] {
-    background: linear-gradient(135deg, rgba(#cd7f32, 0.2) 0%, rgba(#b87333, 0.1) 100%);
-    color: #cd7f32;
-    box-shadow: 0 2px 6px rgba(#cd7f32, 0.18);
-  }
-
   &[data-type='poles'] {
     background: linear-gradient(135deg, rgba(#a855f7, 0.2) 0%, rgba(#7c3aed, 0.1) 100%);
     color: #a855f7;
     box-shadow: 0 2px 6px rgba(#a855f7, 0.18);
+  }
+
+  &[data-type='podiums'] {
+    background: linear-gradient(135deg, rgba(#cd7f32, 0.2) 0%, rgba(#b87333, 0.1) 100%);
+    color: #cd7f32;
+    box-shadow: 0 2px 6px rgba(#cd7f32, 0.18);
   }
 }
 
@@ -59,11 +48,6 @@
   font-size: 0.9em;
 }
 
-.value {
-  font-weight: 700;
-}
-
-.empty {
-  color: $color-text-muted;
-  padding: 3px 8px;
+.label {
+  font-weight: 500;
 }

@@ -1,6 +1,6 @@
 // Цвета
-$color-primary: #e10600; // F1 красный
-$color-primary-muted: #ff6b6b; // Приглушённый красный для текста
+$color-primary: #e10600;
+$color-primary-muted: #ff6b6b;
 $color-secondary: #1e1e1e;
 $color-background: #15151e;
 $color-surface: #1e1e2e;
@@ -10,10 +10,10 @@ $color-border: #3a3a4a;
 $color-gold: #ffd700;
 $color-bronze: #cd7f32;
 
-// Тиры — более контрастные цвета
+// Тиры — более контрастные и различимые
 $tier-s: #ff4d4d; // Яркий красный
-$tier-a: #ff9933; // Оранжевый
-$tier-b: #ffcc00; // Золотой/жёлтый
+$tier-a: #ff8c1a; // Тёмный оранжевый
+$tier-b: #d4a800; // Приглушённый золотой
 $tier-c: #33cc33; // Зелёный
 $tier-d: #3399ff; // Голубой
 $tier-f: #9966ff; // Фиолетовый

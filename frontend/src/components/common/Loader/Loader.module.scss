@@ -1,0 +1,83 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.wrapper {
+  @include flex-center;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-xl;
+}
+
+.spinner {
+  position: relative;
+
+  &.sm {
+    width: 24px;
+    height: 24px;
+
+    .ring {
+      border-width: 3px;
+    }
+  }
+
+  &.md {
+    width: 40px;
+    height: 40px;
+
+    .ring {
+      border-width: 4px;
+    }
+  }
+
+  &.lg {
+    width: 56px;
+    height: 56px;
+
+    .ring {
+      border-width: 5px;
+    }
+  }
+}
+
+.ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 5px solid transparent;
+  border-radius: 50%;
+  animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+
+  &:nth-child(1) {
+    border-top-color: $color-primary;
+    animation-delay: -0.45s;
+    filter: drop-shadow(0 0 8px rgba($color-primary, 0.5));
+  }
+
+  &:nth-child(2) {
+    border-top-color: rgba($color-primary, 0.6);
+    animation-delay: -0.3s;
+    filter: drop-shadow(0 0 6px rgba($color-primary, 0.4));
+  }
+
+  &:nth-child(3) {
+    border-top-color: rgba($color-primary, 0.3);
+    animation-delay: -0.15s;
+    filter: drop-shadow(0 0 4px rgba($color-primary, 0.3));
+  }
+}
+
+.text {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
