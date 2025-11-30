@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+. pnpm-store
+
+# Build
+dist
+build
+
+# IDE
+.idea
+.vscode
+*.swp
+*. swo
+
+# Git
+.git
+. gitignore
+
+# Misc
+*. md
+*.log
+. DS_Store
