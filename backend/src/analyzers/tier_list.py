@@ -14,15 +14,13 @@ class TierListAnalyzer(BaseAnalyzer):
     SCALED_COLS = [
         "win_rate_scaled",
         "podium_rate_scaled",
-        "pole_rate_scaled",  # Добавлено!
-        "avg_grid_scaled",
-        "avg_finish_scaled",
+        "pole_rate_scaled",
+        "avg_grid_scaled", # TODO: сделать grid_vs_team
         "best_finish_scaled",
         "grid_vs_finish_scaled",
         "avg_championship_position_pct_scaled",
         "title_rate_scaled",
         "performance_vs_team_scaled",
-        "avg_team_position_scaled",
     ]
 
     def __init__(
