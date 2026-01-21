@@ -30,7 +30,7 @@ jobs:
       - name: Build and push Analytics API
         uses: docker/build-push-action@v5
         with:
-          context: ./analitycs-api
+          context: ./analytics-api
           file: ./analytics-api/Dockerfile
           push: true
           tags: |
