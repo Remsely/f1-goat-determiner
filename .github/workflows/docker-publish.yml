@@ -26,16 +26,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # === Backend ===
-      - name: Build and push Backend
+      # === Analytics API ===
+      - name: Build and push Analytics API
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
-          file: ./backend/Dockerfile
+          context: ./analitycs-api
+          file: ./analytics-api/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-backend:latest
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-backend:${{ github.sha }}
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-analytics-api:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-analytics-api:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

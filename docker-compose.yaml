@@ -1,9 +1,9 @@
 services:
-  backend:
+  analytics-api:
     build:
-      context: analytics-api
+      context: ./analytics-api
       dockerfile: Dockerfile
-    container_name: f1-goat-backend
+    container_name: f1-goat-analytics-api
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
