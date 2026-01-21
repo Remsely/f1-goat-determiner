@@ -12,7 +12,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: front
       dockerfile: Dockerfile
     container_name: f1-goat-frontend
     volumes:

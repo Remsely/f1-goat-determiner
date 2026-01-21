@@ -64,7 +64,7 @@ dmypy.json
 logs/
 
 # Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.next/
-frontend/build/
+front/node_modules/
+front/dist/
+front/.next/
+front/build/
