@@ -1,0 +1,28 @@
+[versions]
+
+# Core
+java = "25"
+kotlin = "2.3.0"
+spring-boot = "4.0.1"
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+[libraries]
+
+# Spring Boot starters
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+# Kotlin
+jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+[plugins]
+
+# Kotlin
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+
+# Spring
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
