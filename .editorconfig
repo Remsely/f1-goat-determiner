@@ -1,0 +1,50 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf # Use Unix-style line endings (LF)
+indent_style = space # Use spaces for indentation
+indent_size = 4 # Indentation size - 4 spaces
+trim_trailing_whitespace = true # Remove trailing whitespace at the end of lines
+insert_final_newline = true # Add empty line at the end of file
+
+[*.{kt,kts}]
+max_line_length = 120
+ij_kotlin_continuation_indent_size = 4 # Continuation indent size - 4 spaces
+ij_kotlin_space_after_comma = true
+ij_kotlin_allow_trailing_comma = true # Allow trailing comma after last element in declaration
+ij_kotlin_allow_trailing_comma_on_call_site = true # Allow trailing comma after last argument in call
+ij_kotlin_name_count_to_use_star_import = 2147483647 # Never use wildcard imports (import package.*)
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647 # Never use wildcard imports for class members
+ij_kotlin_packages_to_use_import_on_demand = non.existent.package # Non-existent package to block wildcard imports
+
+[*.py]
+max_line_length = 120
+
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+max_line_length = 120
+ij_typescript_use_double_quotes = false
+ij_typescript_force_quote_style = true
+ij_typescript_enforce_trailing_comma = whenmultiline
+
+[*.{css,scss,sass}]
+indent_size = 2
+max_line_length = 120
+
+[*.html]
+indent_size = 2
+max_line_length = 120
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+[*.{toml,ini,cfg,conf}]
+indent_size = 2
