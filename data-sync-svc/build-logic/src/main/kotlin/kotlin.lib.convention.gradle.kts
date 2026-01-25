@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("base.convention")
+    id("kotlin.lint.convention")
 }
 
 apply(plugin = libs.plugins.kotlin.jvm.get().pluginId)
@@ -14,7 +15,10 @@ extensions.configure<JavaPluginExtension> {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(javaVersion.majorVersion.toInt()))
     }
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
 }
+
 
 tasks {
     withType<KotlinCompile> {

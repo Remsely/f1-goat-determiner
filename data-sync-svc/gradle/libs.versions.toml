@@ -1,9 +1,12 @@
 [versions]
 
 # Core
-java = "25"
+java = "21"
 kotlin = "2.3.0"
 spring-boot = "4.0.1"
+
+# Utils
+detekt = "1.23.8"
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -15,6 +18,7 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 
 # Kotlin
 jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -26,3 +30,6 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 # Spring
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+
+# Detekt
+detekt-plugin = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
