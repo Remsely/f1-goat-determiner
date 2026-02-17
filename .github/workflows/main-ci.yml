@@ -137,7 +137,7 @@ jobs:
   data-sync-build:
     name: Data Sync - Build & Push
     needs: [ detect-changes, data-sync-lint ]
-    if: needs.detect-changes.outputs.data-sync-svc == 'true'
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
