@@ -34,20 +34,32 @@ jobs:
               - 'analytics-api/pyproject.toml'
               - 'analytics-api/ruff.toml'
               - 'analytics-api/Dockerfile'
+              - '.github/workflows/lint-python.yml'
+              - '.github/workflows/pr-check.yml'
+              - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
               - 'frontend/package.json'
               - 'frontend/eslint.config.js'
               - 'frontend/.prettierrc.json'
               - 'frontend/Dockerfile'
+              - '.github/workflows/lint-typescript.yml'
+              - '.github/workflows/pr-check.yml'
+              - '.github/workflows/main-ci.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
               - 'data-sync-svc/domain/**'
               - 'data-sync-svc/build.gradle.kts'
               - 'data-sync-svc/detekt.yml'
               - 'data-sync-svc/Dockerfile'
+              - '.github/workflows/lint-kotlin.yml'
+              - '.github/workflows/pr-check.yml'
+              - '.github/workflows/main-ci.yml'
             nginx:
               - 'nginx/**'
+              - '.github/workflows/lint-nginx.yml'
+              - '.github/workflows/pr-check.yml'
+              - '.github/workflows/main-ci.yml'
 
   # === ANALYTICS API ===
   analytics-api-lint:
