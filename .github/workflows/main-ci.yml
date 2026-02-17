@@ -1,0 +1,202 @@
+name: Main CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: docker.io
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      analytics-api: ${{ steps.filter.outputs.analytics-api }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      data-sync-svc: ${{ steps.filter.outputs.data-sync-svc }}
+      nginx: ${{ steps.filter.outputs.nginx }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            analytics-api:
+              - 'analytics-api/src/**'
+              - 'analytics-api/tests/**'
+              - 'analytics-api/pyproject.toml'
+              - 'analytics-api/ruff.toml'
+              - 'analytics-api/Dockerfile'
+            frontend:
+              - 'frontend/src/**'
+              - 'frontend/package.json'
+              - 'frontend/eslint.config.js'
+              - 'frontend/.prettierrc.json'
+              - 'frontend/Dockerfile'
+            data-sync-svc:
+              - 'data-sync-svc/app/**'
+              - 'data-sync-svc/domain/**'
+              - 'data-sync-svc/build.gradle.kts'
+              - 'data-sync-svc/detekt.yml'
+              - 'data-sync-svc/Dockerfile'
+            nginx:
+              - 'nginx/**'
+
+  # === ANALYTICS API ===
+  analytics-api-lint:
+    name: Analytics API - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.analytics-api == 'true'
+    uses: ./.github/workflows/lint-python.yml
+    with:
+      working-directory: './analytics-api'
+
+  analytics-api-build:
+    name: Analytics API - Build & Push
+    needs: [ detect-changes, analytics-api-lint ]
+    if: needs.detect-changes.outputs.analytics-api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./analytics-api
+          file: ./analytics-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-analytics-api:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-analytics-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # === FRONTEND ===
+  frontend-lint:
+    name: Frontend - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/lint-typescript.yml
+    with:
+      working-directory: './frontend'
+
+  frontend-build:
+    name: Frontend - Build & Push
+    needs: [ detect-changes, frontend-lint ]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-frontend:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # === DATA SYNC SVC ===
+  data-sync-lint:
+    name: Data Sync - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.data-sync-svc == 'true'
+    uses: ./.github/workflows/lint-kotlin.yml
+    with:
+      working-directory: './data-sync-svc'
+
+  data-sync-build:
+    name: Data Sync - Build & Push
+    needs: [ detect-changes, data-sync-lint ]
+    if: needs.detect-changes.outputs.data-sync-svc == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./data-sync-svc
+          file: ./data-sync-svc/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-data-sync-svc:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-data-sync-svc:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # === NGINX ===
+  nginx-lint:
+    name: Nginx - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.nginx == 'true'
+    uses: ./.github/workflows/lint-nginx.yml
+    with:
+      working-directory: './nginx'
+
+  nginx-build:
+    name: Nginx - Build & Push
+    needs: [ detect-changes, nginx-lint ]
+    if: needs.detect-changes.outputs.nginx == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx
+          file: ./nginx/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-nginx:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-nginx:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

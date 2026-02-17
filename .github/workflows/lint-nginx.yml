@@ -1,0 +1,21 @@
+name: Lint Nginx
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  lint:
+    name: Validate Nginx Config
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate nginx.conf syntax
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          docker run --rm -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro nginx:alpine nginx -t

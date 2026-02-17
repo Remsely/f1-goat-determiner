@@ -10,7 +10,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Job 1: Detekt changes
   detect-changes:
     name: Detect Changed Services
     runs-on: ubuntu-latest
@@ -18,6 +17,7 @@ jobs:
       analytics-api: ${{ steps.filter.outputs.analytics-api }}
       frontend: ${{ steps.filter.outputs.frontend }}
       data-sync-svc: ${{ steps.filter.outputs.data-sync-svc }}
+      nginx: ${{ steps.filter.outputs.nginx }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,8 +40,9 @@ jobs:
               - 'data-sync-svc/domain/**'
               - 'data-sync-svc/build.gradle.kts'
               - 'data-sync-svc/detekt.yml'
+            nginx:
+              - 'nginx/**'
 
-  # Job 2: Analytics API lint
   analytics-api-lint:
     name: Analytics API - Lint
     needs: detect-changes
@@ -50,7 +51,6 @@ jobs:
     with:
       working-directory: './analytics-api'
 
-  # Job 3: Frontend lint
   frontend-lint:
     name: Frontend - Lint
     needs: detect-changes
@@ -59,7 +59,6 @@ jobs:
     with:
       working-directory: './frontend'
 
-  # Job 4: Data Sync lint
   data-sync-lint:
     name: Data Sync - Lint
     needs: detect-changes
@@ -68,11 +67,18 @@ jobs:
     with:
       working-directory: './data-sync-svc'
 
-  # Job 5: Финальный статус (всегда запускается)
+  nginx-lint:
+    name: Nginx - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.nginx == 'true'
+    uses: ./.github/workflows/lint-nginx.yml
+    with:
+      working-directory: './nginx'
+
   pr-check-status:
     name: PR Status Summary
     runs-on: ubuntu-latest
-    needs: [ detect-changes, analytics-api-lint, frontend-lint, data-sync-lint ]
+    needs: [ detect-changes, analytics-api-lint, frontend-lint, data-sync-lint, nginx-lint ]
     if: always()
     steps:
       - name: Check results
@@ -80,11 +86,12 @@ jobs:
           echo "Analytics API: ${{ needs.analytics-api-lint.result }}"
           echo "Frontend: ${{ needs.frontend-lint.result }}"
           echo "Data Sync: ${{ needs.data-sync-lint.result }}"
+          echo "Nginx: ${{ needs.nginx-lint.result }}"
 
-          # Fail if any job failed
           if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
              [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
-             [ "${{ needs.data-sync-lint.result }}" == "failure" ]; then
+             [ "${{ needs.data-sync-lint.result }}" == "failure" ] || \
+             [ "${{ needs.nginx-lint.result }}" == "failure" ]; then
             echo "❌ Some checks failed"
             exit 1
           fi
