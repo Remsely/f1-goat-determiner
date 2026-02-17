@@ -9,6 +9,7 @@ on:
 
 jobs:
   lint:
+    name: Lint Kotlin
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

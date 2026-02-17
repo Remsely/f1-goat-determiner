@@ -32,7 +32,6 @@ jobs:
               - 'analytics-api/ruff.toml'
               - '.github/workflows/lint-python.yml'
               - '.github/workflows/pr-check.yml'
-              - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
               - 'frontend/package.json'
@@ -40,7 +39,6 @@ jobs:
               - 'frontend/.prettierrc.json'
               - '.github/workflows/lint-typescript.yml'
               - '.github/workflows/pr-check.yml'
-              - '.github/workflows/main-ci.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
               - 'data-sync-svc/domain/**'
@@ -48,12 +46,10 @@ jobs:
               - 'data-sync-svc/detekt.yml'
               - '.github/workflows/lint-kotlin.yml'
               - '.github/workflows/pr-check.yml'
-              - '.github/workflows/main-ci.yml'
             nginx:
               - 'nginx/**'
               - '.github/workflows/lint-nginx.yml'
               - '.github/workflows/pr-check.yml'
-              - '.github/workflows/main-ci.yml'
 
   analytics-api-lint:
     name: Analytics API - Lint
