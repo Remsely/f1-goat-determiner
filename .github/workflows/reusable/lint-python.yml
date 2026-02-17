@@ -1,0 +1,25 @@
+name: Lint Python
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install ruff
+        run: pip install ruff==0.14.7
+      - name: Run ruff check
+        working-directory: ${{ inputs.working-directory }}
+        run: ruff check .
+      - name: Run ruff format check
+        working-directory: ${{ inputs.working-directory }}
+        run: ruff format --check .

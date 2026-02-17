@@ -1,0 +1,92 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Job 1: Detekt changes
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      analytics-api: ${{ steps.filter.outputs.analytics-api }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      data-sync-svc: ${{ steps.filter.outputs.data-sync-svc }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            analytics-api:
+              - 'analytics-api/src/**'
+              - 'analytics-api/tests/**'
+              - 'analytics-api/pyproject.toml'
+              - 'analytics-api/ruff.toml'
+            frontend:
+              - 'frontend/src/**'
+              - 'frontend/package.json'
+              - 'frontend/eslint.config.js'
+              - 'frontend/.prettierrc.json'
+            data-sync-svc:
+              - 'data-sync-svc/app/**'
+              - 'data-sync-svc/domain/**'
+              - 'data-sync-svc/build.gradle.kts'
+              - 'data-sync-svc/detekt.yml'
+
+  # Job 2: Analytics API lint
+  analytics-api-lint:
+    name: Analytics API - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.analytics-api == 'true'
+    uses: ./.github/workflows/reusable/lint-python.yml
+    with:
+      working-directory: './analytics-api'
+
+  # Job 3: Frontend lint
+  frontend-lint:
+    name: Frontend - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/reusable/lint-typescript.yml
+    with:
+      working-directory: './frontend'
+
+  # Job 4: Data Sync lint
+  data-sync-lint:
+    name: Data Sync - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.data-sync-svc == 'true'
+    uses: ./.github/workflows/reusable/lint-kotlin.yml
+    with:
+      working-directory: './data-sync-svc'
+
+  # Job 5: Финальный статус (всегда запускается)
+  pr-check-status:
+    name: PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [ detect-changes, analytics-api-lint, frontend-lint, data-sync-lint ]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "Analytics API: ${{ needs.analytics-api-lint.result }}"
+          echo "Frontend: ${{ needs.frontend-lint.result }}"
+          echo "Data Sync: ${{ needs.data-sync-lint.result }}"
+
+          # Fail if any job failed
+          if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
+             [ "${{ needs.data-sync-lint.result }}" == "failure" ]; then
+            echo "❌ Some checks failed"
+            exit 1
+          fi
+
+          echo "✅ All checks passed"

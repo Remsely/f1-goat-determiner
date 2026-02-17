@@ -1,0 +1,24 @@
+name: Lint TypeScript
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: bun install
+      - name: Run ESLint
+        working-directory: ${{ inputs.working-directory }}
+        run: bun run lint
+      - name: Check Prettier
+        working-directory: ${{ inputs.working-directory }}
+        run: bun run format:check
