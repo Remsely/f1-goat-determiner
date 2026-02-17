@@ -2,8 +2,8 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from .base import BaseAnalyzer
 from ..core.preprocessing import F1Preprocessor
+from .base import BaseAnalyzer
 
 
 class TierListAnalyzer(BaseAnalyzer):

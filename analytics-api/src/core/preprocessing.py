@@ -213,8 +213,7 @@ class F1Preprocessor:
                     with_poles_no_wins["pole_rate"] / with_poles_no_wins["podium_rate"]
             ).median()
         else:
-            podium_pole_ratio = 0.
-            2
+            podium_pole_ratio = 0.2
 
         # Заполняем для пилотов БЕЗ поулов, но с победами/подиумами
         no_poles_mask = ~has_poles

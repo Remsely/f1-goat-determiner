@@ -2,13 +2,13 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .analyzers import TierListAnalyzer
-from .core import settings, get_data_loader
+from .core import get_data_loader, settings
 from .models import (
+    DataStatsResponse,
+    ErrorResponse,
     HealthResponse,
     SeasonsResponse,
-    DataStatsResponse,
     SeasonStats,
-    ErrorResponse,
     TierListResponse,
 )
 
@@ -67,7 +67,7 @@ def get_seasons():
             seasons=seasons
         )
     except FileNotFoundError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get(
@@ -93,7 +93,7 @@ def get_stats():
             )
         )
     except FileNotFoundError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get(
@@ -107,23 +107,23 @@ def get_stats():
     }
 )
 def get_tier_list(
-        seasons: str | None = Query(
-            None,
-            description="Сезоны через запятую",
-            example="2020,2021,2022,2023,2024"
-        ),
-        n_tiers: int = Query(
-            4,
-            ge=2,
-            le=6,
-            description="Количество тиров (от 2 до 6)"
-        ),
-        min_races: int = Query(
-            10,
-            ge=1,
-            le=100,
-            description="Минимум гонок для включения пилота"
-        )
+    seasons: str | None = Query(
+        None,
+        description="Сезоны через запятую",
+        example="2020,2021,2022,2023,2024"
+    ),
+    n_tiers: int = Query(
+        4,
+        ge=2,
+        le=6,
+        description="Количество тиров (от 2 до 6)"
+    ),
+    min_races: int = Query(
+        10,
+        ge=1,
+        le=100,
+        description="Минимум гонок для включения пилота"
+    )
 ):
     """
     Генерирует тир-лист пилотов на основе кластеризации K-Means.
@@ -138,11 +138,11 @@ def get_tier_list(
     if seasons:
         try:
             season_list = [int(s.strip()) for s in seasons.split(",")]
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400,
                 detail="Неверный формат сезонов.  Используйте: 2020,2021,2022"
-            )
+            ) from e
 
     try:
         analyzer = TierListAnalyzer(
@@ -152,6 +152,6 @@ def get_tier_list(
         )
         return analyzer.analyze()
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

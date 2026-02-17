@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 import pandas as pd
 
 from .config import settings
@@ -38,27 +36,21 @@ class F1DataLoader:
                 f"and place in {self._data_dir}"
             )
 
-    @lru_cache(maxsize=1)
     def results(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "results.csv")
 
-    @lru_cache(maxsize=1)
     def races(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "races.csv")
 
-    @lru_cache(maxsize=1)
     def drivers(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "drivers.csv")
 
-    @lru_cache(maxsize=1)
     def driver_standings(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "driver_standings.csv")
 
-    @lru_cache(maxsize=1)
     def constructor_standings(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "constructor_standings.csv")
 
-    @lru_cache(maxsize=1)
     def qualifying(self) -> pd.DataFrame:
         return pd.read_csv(self._data_dir / "qualifying.csv")
 
