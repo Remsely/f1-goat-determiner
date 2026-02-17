@@ -46,7 +46,7 @@ jobs:
     name: Analytics API - Lint
     needs: detect-changes
     if: needs.detect-changes.outputs.analytics-api == 'true'
-    uses: ./.github/workflows/reusable/lint-python.yml
+    uses: ./.github/workflows/lint-python.yml
     with:
       working-directory: './analytics-api'
 
@@ -55,7 +55,7 @@ jobs:
     name: Frontend - Lint
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
-    uses: ./.github/workflows/reusable/lint-typescript.yml
+    uses: ./.github/workflows/lint-typescript.yml
     with:
       working-directory: './frontend'
 
@@ -64,7 +64,7 @@ jobs:
     name: Data Sync - Lint
     needs: detect-changes
     if: needs.detect-changes.outputs.data-sync-svc == 'true'
-    uses: ./.github/workflows/reusable/lint-kotlin.yml
+    uses: ./.github/workflows/lint-kotlin.yml
     with:
       working-directory: './data-sync-svc'
 
