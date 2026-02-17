@@ -88,7 +88,9 @@
   align-items: flex-start;
   gap: $spacing-md;
   padding: $spacing-lg;
-  transition: transform 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s;
 
   &:hover:not(.disabled) {
     transform: translateY(-4px);

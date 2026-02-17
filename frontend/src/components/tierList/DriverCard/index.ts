@@ -1,1 +1,1 @@
-export {DriverCard} from './DriverCard';
+export { DriverCard } from './DriverCard';

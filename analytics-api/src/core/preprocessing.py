@@ -21,11 +21,7 @@ class F1Preprocessor:
         "avg_team_position",
     ]
 
-    def __init__(
-            self,
-            seasons: list[int] | None = None,
-            min_races: int = 10
-    ):
+    def __init__(self, seasons: list[int] | None = None, min_races: int = 10):
         self.seasons = seasons
         self.min_races = min_races
         self._loader = get_data_loader()
@@ -49,10 +45,7 @@ class F1Preprocessor:
 
         # === Поулы из квалификации ===
         poles_by_driver = (
-            qualifying[qualifying["position"] == 1]
-            .groupby("driverId")
-            .size()
-            .reset_index(name="total_poles")
+            qualifying[qualifying["position"] == 1].groupby("driverId").size().reset_index(name="total_poles")
         )
 
         # === Сила команды по сезонам ===
@@ -60,8 +53,7 @@ class F1Preprocessor:
         year_final_race.columns = ["year", "final_raceId"]
 
         team_strength = (
-            constructor_standings
-            .merge(year_final_race, left_on="raceId", right_on="final_raceId")
+            constructor_standings.merge(year_final_race, left_on="raceId", right_on="final_raceId")
             .groupby(["constructorId", "year"])["position"]
             .min()
             .reset_index()
@@ -69,44 +61,28 @@ class F1Preprocessor:
         team_strength.columns = ["constructorId", "year", "team_position"]
 
         # === Позиция в чемпионате ===
-        final_standings = (
-            driver_standings
-            .merge(year_final_race, left_on="raceId", right_on="final_raceId")
-            [["driverId", "year", "position", "points"]]
-        )
+        final_standings = driver_standings.merge(year_final_race, left_on="raceId", right_on="final_raceId")[
+            ["driverId", "year", "position", "points"]
+        ]
 
         if self.seasons:
             final_standings = final_standings[final_standings["year"].isin(self.seasons)]
 
-        drivers_per_season = (
-            final_standings
-            .groupby("year")["driverId"]
-            .nunique()
-            .reset_index()
-        )
+        drivers_per_season = final_standings.groupby("year")["driverId"].nunique().reset_index()
         drivers_per_season.columns = ["year", "total_drivers"]
 
         final_standings = final_standings.merge(drivers_per_season, on="year", how="left")
 
         final_standings["championship_position_pct"] = (
-                (final_standings["total_drivers"] - final_standings["position"]) /
-                (final_standings["total_drivers"] - 1).replace(0, 1) * 100
+            (final_standings["total_drivers"] - final_standings["position"])
+            / (final_standings["total_drivers"] - 1).replace(0, 1)
+            * 100
         ).clip(0, 100)
 
-        avg_championship = (
-            final_standings
-            .groupby("driverId")["championship_position_pct"]
-            .mean()
-            .reset_index()
-        )
+        avg_championship = final_standings.groupby("driverId")["championship_position_pct"].mean().reset_index()
         avg_championship.columns = ["driverId", "avg_championship_position_pct"]
 
-        career_seasons = (
-            final_standings
-            .groupby("driverId")["year"]
-            .nunique()
-            .reset_index()
-        )
+        career_seasons = final_standings.groupby("driverId")["year"].nunique().reset_index()
         career_seasons.columns = ["driverId", "career_seasons"]
 
         titles = (
@@ -118,13 +94,8 @@ class F1Preprocessor:
 
         # === Объединение результатов гонок ===
         merged = (
-            results
-            .merge(races[["raceId", "year"]], on="raceId", how="left")
-            .merge(
-                drivers[["driverId", "driverRef", "forename", "surname", "nationality"]],
-                on="driverId",
-                how="left"
-            )
+            results.merge(races[["raceId", "year"]], on="raceId", how="left")
+            .merge(drivers[["driverId", "driverRef", "forename", "surname", "nationality"]], on="driverId", how="left")
             .merge(team_strength, on=["constructorId", "year"], how="left")
         )
 
@@ -136,8 +107,7 @@ class F1Preprocessor:
 
         # === Агрегация гоночных показателей ===
         features = (
-            merged
-            .groupby(["driverId", "driverRef", "forename", "surname", "nationality"])
+            merged.groupby(["driverId", "driverRef", "forename", "surname", "nationality"])
             .agg(
                 total_races=("raceId", "nunique"),
                 total_wins=("positionOrder", lambda x: (x == 1).sum()),
@@ -201,20 +171,15 @@ class F1Preprocessor:
         if len(with_poles_and_wins) < 3:
             return df
 
-        with_poles_and_wins["pole_win_ratio"] = (
-                with_poles_and_wins["pole_rate"] / with_poles_and_wins["win_rate"]
-        )
+        with_poles_and_wins["pole_win_ratio"] = with_poles_and_wins["pole_rate"] / with_poles_and_wins["win_rate"]
         avg_pole_win_ratio = with_poles_and_wins["pole_win_ratio"].median()
 
         # Пилоты с поулами но без побед (только подиумы)
         with_poles_no_wins = df[has_poles & (df["win_rate"] == 0) & (df["podium_rate"] > 0)]
         if len(with_poles_no_wins) > 0:
-            podium_pole_ratio = (
-                    with_poles_no_wins["pole_rate"] / with_poles_no_wins["podium_rate"]
-            ).median()
+            podium_pole_ratio = (with_poles_no_wins["pole_rate"] / with_poles_no_wins["podium_rate"]).median()
         else:
-            podium_pole_ratio = 0.
-            2
+            podium_pole_ratio = 0.2
 
         # Заполняем для пилотов БЕЗ поулов, но с победами/подиумами
         no_poles_mask = ~has_poles
@@ -246,10 +211,6 @@ class F1Preprocessor:
         available_cols = [c for c in self.FEATURE_COLS if c in data.columns]
         scaled = scaler.fit_transform(data[available_cols])
 
-        scaled_df = pd.DataFrame(
-            scaled,
-            columns=[f"{col}_scaled" for col in available_cols],
-            index=data.index
-        )
+        scaled_df = pd.DataFrame(scaled, columns=[f"{col}_scaled" for col in available_cols], index=data.index)
 
         return data, scaled_df

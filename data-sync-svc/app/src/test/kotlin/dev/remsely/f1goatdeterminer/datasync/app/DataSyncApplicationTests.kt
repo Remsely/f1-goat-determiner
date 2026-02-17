@@ -7,5 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest
 class DataSyncApplicationTests {
     @Test
     fun contextLoads() {
+        // Application is not crushed
     }
 }

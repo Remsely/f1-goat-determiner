@@ -8,7 +8,9 @@
   border-radius: 6px;
   font-size: $font-size-sm;
   font-weight: 600;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
   cursor: default;
 
   &:hover {

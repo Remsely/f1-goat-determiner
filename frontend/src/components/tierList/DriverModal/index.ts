@@ -1,1 +1,1 @@
-export {DriverModal} from './DriverModal';
+export { DriverModal } from './DriverModal';

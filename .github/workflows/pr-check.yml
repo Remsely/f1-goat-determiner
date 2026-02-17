@@ -1,0 +1,99 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      analytics-api: ${{ steps.filter.outputs.analytics-api }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      data-sync-svc: ${{ steps.filter.outputs.data-sync-svc }}
+      nginx: ${{ steps.filter.outputs.nginx }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            analytics-api:
+              - 'analytics-api/src/**'
+              - 'analytics-api/tests/**'
+              - 'analytics-api/pyproject.toml'
+              - 'analytics-api/ruff.toml'
+            frontend:
+              - 'frontend/src/**'
+              - 'frontend/package.json'
+              - 'frontend/eslint.config.js'
+              - 'frontend/.prettierrc.json'
+            data-sync-svc:
+              - 'data-sync-svc/app/**'
+              - 'data-sync-svc/domain/**'
+              - 'data-sync-svc/build.gradle.kts'
+              - 'data-sync-svc/detekt.yml'
+            nginx:
+              - 'nginx/**'
+
+  analytics-api-lint:
+    name: Analytics API - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.analytics-api == 'true'
+    uses: ./.github/workflows/lint-python.yml
+    with:
+      working-directory: './analytics-api'
+
+  frontend-lint:
+    name: Frontend - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/lint-typescript.yml
+    with:
+      working-directory: './frontend'
+
+  data-sync-lint:
+    name: Data Sync - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.data-sync-svc == 'true'
+    uses: ./.github/workflows/lint-kotlin.yml
+    with:
+      working-directory: './data-sync-svc'
+
+  nginx-lint:
+    name: Nginx - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.nginx == 'true'
+    uses: ./.github/workflows/lint-nginx.yml
+    with:
+      working-directory: './nginx'
+
+  pr-check-status:
+    name: PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [ detect-changes, analytics-api-lint, frontend-lint, data-sync-lint, nginx-lint ]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "Analytics API: ${{ needs.analytics-api-lint.result }}"
+          echo "Frontend: ${{ needs.frontend-lint.result }}"
+          echo "Data Sync: ${{ needs.data-sync-lint.result }}"
+          echo "Nginx: ${{ needs.nginx-lint.result }}"
+
+          if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
+             [ "${{ needs.data-sync-lint.result }}" == "failure" ] || \
+             [ "${{ needs.nginx-lint.result }}" == "failure" ]; then
+            echo "❌ Some checks failed"
+            exit 1
+          fi
+
+          echo "✅ All checks passed"

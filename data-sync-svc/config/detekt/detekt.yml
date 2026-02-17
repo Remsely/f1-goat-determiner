@@ -1,0 +1,81 @@
+formatting:
+  active: true
+  android: false
+  autoCorrect: true
+
+  MaximumLineLength:
+    active: true
+    maxLineLength: 120
+
+  ImportOrdering:
+    active: true
+
+  NoWildcardImports:
+    active: true
+
+  TrailingCommaOnDeclarationSite:
+    active: true
+
+  TrailingCommaOnCallSite:
+    active: true
+
+naming:
+  active: true
+
+  FunctionNaming:
+    active: true
+    excludes: [ '**/test/**', '**/*Test.kt', '**/*Spec.kt' ]
+
+potential-bugs:
+  active: true
+
+  LateinitUsage:
+    active: true
+
+style:
+  active: true
+
+  UnusedPrivateProperty:
+    active: true
+
+  ForbiddenComment:
+    active: true
+
+  MagicNumber:
+    active: true
+    ignoreNumbers: [ '-1', '0', '1', '2' ]
+    excludes: [ '**/test/**', '**/*Test.kt', '**/*Tests.kt', '**/*Spec.kt' ]
+
+  ReturnCount:
+    active: true
+    max: 3
+    excludeGuardClauses: true
+
+  SerialVersionUIDInSerializableClass:
+    active: false
+
+complexity:
+  active: true
+
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 30
+    thresholdInClasses: 30
+    thresholdInInterfaces: 20
+    excludes: [ '**/test/**', '**/*Test.kt', '**/*Spec.kt' ]
+
+  LongMethod:
+    active: true
+    threshold: 100
+    excludes: [ '**/test/**', '**/*Test.kt' ]
+
+  LargeClass:
+    active: true
+    threshold: 1000
+    excludes: [ '**/test/**', '**/*Test.kt' ]
+
+  LongParameterList:
+    active: true
+    functionThreshold: 8
+    constructorThreshold: 10
+    ignoreDefaultParameters: true
