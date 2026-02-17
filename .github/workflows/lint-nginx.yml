@@ -9,7 +9,6 @@ on:
 
 jobs:
   lint:
-    name: Validate Nginx Config
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
