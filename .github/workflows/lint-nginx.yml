@@ -9,15 +9,23 @@ on:
 
 jobs:
   lint:
-    name: Validate Nginx Config
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate nginx.conf syntax
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install gixy
+        run: pip install gixy
+
+      - name: Run gixy
         working-directory: ${{ inputs.working-directory }}
-        run: |
-          docker run --rm \
-            -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
-            nginx:alpine nginx -t
+        run: gixy nginx.conf
+
+      - name: Summary
+        if: success()
+        run: echo "✅ Nginx configuration is valid and secure."
