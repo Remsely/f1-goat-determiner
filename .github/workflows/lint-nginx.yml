@@ -9,6 +9,7 @@ on:
 
 jobs:
   lint:
+    name: Lint Nginx config
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

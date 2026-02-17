@@ -35,7 +35,6 @@ jobs:
               - 'analytics-api/ruff.toml'
               - 'analytics-api/Dockerfile'
               - '.github/workflows/lint-python.yml'
-              - '.github/workflows/pr-check.yml'
               - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
@@ -44,7 +43,6 @@ jobs:
               - 'frontend/.prettierrc.json'
               - 'frontend/Dockerfile'
               - '.github/workflows/lint-typescript.yml'
-              - '.github/workflows/pr-check.yml'
               - '.github/workflows/main-ci.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
@@ -53,12 +51,10 @@ jobs:
               - 'data-sync-svc/detekt.yml'
               - 'data-sync-svc/Dockerfile'
               - '.github/workflows/lint-kotlin.yml'
-              - '.github/workflows/pr-check.yml'
               - '.github/workflows/main-ci.yml'
             nginx:
               - 'nginx/**'
               - '.github/workflows/lint-nginx.yml'
-              - '.github/workflows/pr-check.yml'
               - '.github/workflows/main-ci.yml'
 
   # === ANALYTICS API ===
@@ -72,8 +68,7 @@ jobs:
 
   analytics-api-build:
     name: Analytics API - Build & Push
-    needs: [ detect-changes, analytics-api-lint ]
-    if: needs.detect-changes.outputs.analytics-api == 'true'
+    needs: analytics-api-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,8 +105,7 @@ jobs:
 
   frontend-build:
     name: Frontend - Build & Push
-    needs: [ detect-changes, frontend-lint ]
-    if: needs.detect-changes.outputs.frontend == 'true'
+    needs: frontend-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -148,7 +142,7 @@ jobs:
 
   data-sync-build:
     name: Data Sync - Build & Push
-    needs: [ detect-changes, data-sync-lint ]
+    needs: data-sync-lint
     if: false
     runs-on: ubuntu-latest
     steps:
@@ -186,8 +180,7 @@ jobs:
 
   nginx-build:
     name: Nginx - Build & Push
-    needs: [ detect-changes, nginx-lint ]
-    if: needs.detect-changes.outputs.nginx == 'true'
+    needs: nginx-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
