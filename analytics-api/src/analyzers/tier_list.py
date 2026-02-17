@@ -15,7 +15,7 @@ class TierListAnalyzer(BaseAnalyzer):
         "win_rate_scaled",
         "podium_rate_scaled",
         "pole_rate_scaled",
-        "avg_grid_scaled", # TODO: сделать grid_vs_team
+        "avg_grid_scaled",  # TODO: сделать grid_vs_team
         "best_finish_scaled",
         "grid_vs_finish_scaled",
         "avg_championship_position_pct_scaled",
@@ -23,12 +23,7 @@ class TierListAnalyzer(BaseAnalyzer):
         "performance_vs_team_scaled",
     ]
 
-    def __init__(
-            self,
-            seasons: list[int] | None = None,
-            n_tiers: int = 4,
-            min_races: int = 10
-    ):
+    def __init__(self, seasons: list[int] | None = None, n_tiers: int = 4, min_races: int = 10):
         self.seasons = seasons
         self.n_tiers = min(n_tiers, len(self.TIER_LABELS))
         self.min_races = min_races
@@ -51,15 +46,10 @@ class TierListAnalyzer(BaseAnalyzer):
 
         data, scaled_df = self._preprocessor.get_scaled_features()
 
-        full_data = pd.concat(
-            [data.reset_index(drop=True), scaled_df.reset_index(drop=True)],
-            axis=1
-        )
+        full_data = pd.concat([data.reset_index(drop=True), scaled_df.reset_index(drop=True)], axis=1)
 
         if len(full_data) < self.n_tiers:
-            raise ValueError(
-                f"Недостаточно данных: {len(full_data)} пилотов для {self.n_tiers} тиров"
-            )
+            raise ValueError(f"Недостаточно данных: {len(full_data)} пилотов для {self.n_tiers} тиров")
 
         available_cols = [c for c in self.SCALED_COLS if c in full_data.columns]
         features = full_data[available_cols]
@@ -69,32 +59,27 @@ class TierListAnalyzer(BaseAnalyzer):
 
         self._silhouette_score = silhouette_score(features, full_data["cluster"])
 
-        cluster_quality = (
-            full_data
-            .groupby("cluster")
-            .agg({
+        cluster_quality = full_data.groupby("cluster").agg(
+            {
                 "win_rate": "mean",
                 "podium_rate": "mean",
                 "pole_rate": "mean",
                 "avg_championship_position_pct": "mean",
                 "avg_finish": "mean",
-            })
+            }
         )
 
         cluster_quality["composite_score"] = (
-                cluster_quality["win_rate"] * 0.25 +
-                cluster_quality["podium_rate"] * 0.15 +
-                cluster_quality["pole_rate"] * 0.15 +
-                cluster_quality["avg_championship_position_pct"] * 0.25 +
-                (20 - cluster_quality["avg_finish"]) * 2
+            cluster_quality["win_rate"] * 0.25
+            + cluster_quality["podium_rate"] * 0.15
+            + cluster_quality["pole_rate"] * 0.15
+            + cluster_quality["avg_championship_position_pct"] * 0.25
+            + (20 - cluster_quality["avg_finish"]) * 2
         )
 
         cluster_quality = cluster_quality.sort_values("composite_score", ascending=False)
 
-        cluster_to_tier = {
-            cluster: self.TIER_LABELS[i]
-            for i, cluster in enumerate(cluster_quality.index)
-        }
+        cluster_to_tier = {cluster: self.TIER_LABELS[i] for i, cluster in enumerate(cluster_quality.index)}
         full_data["tier"] = full_data["cluster"].map(cluster_to_tier)
 
         self._result_data = full_data
@@ -113,7 +98,7 @@ class TierListAnalyzer(BaseAnalyzer):
 
         tiers = {}
 
-        for tier_label in self.TIER_LABELS[:self.n_tiers]:
+        for tier_label in self.TIER_LABELS[: self.n_tiers]:
             tier_data = self._result_data[self._result_data["tier"] == tier_label].copy()
 
             if len(tier_data) == 0:
@@ -121,30 +106,32 @@ class TierListAnalyzer(BaseAnalyzer):
 
             tier_data = tier_data.sort_values(
                 ["win_rate", "podium_rate", "pole_rate", "avg_championship_position_pct"],
-                ascending=[False, False, False, False]
+                ascending=[False, False, False, False],
             )
 
             drivers = []
             for _, row in tier_data.iterrows():
-                drivers.append({
-                    "id": int(row["driverId"]),
-                    "ref": row["driverRef"],
-                    "name": row["full_name"],
-                    "nationality": row["nationality"],
-                    "stats": {
-                        "races": int(row["total_races"]),
-                        "wins": int(row["total_wins"]),
-                        "podiums": int(row["total_podiums"]),
-                        "poles": int(row["total_poles"]),
-                        "titles": int(row["total_titles"]),
-                        "win_rate": round(row["win_rate"], 2),
-                        "podium_rate": round(row["podium_rate"], 2),
-                        "pole_rate": round(row["pole_rate"], 2),
-                        "title_rate": round(row["title_rate"], 2),
-                        "avg_championship_pct": round(row["avg_championship_position_pct"], 2),
-                        "avg_finish": round(row["avg_finish"], 2),
+                drivers.append(
+                    {
+                        "id": int(row["driverId"]),
+                        "ref": row["driverRef"],
+                        "name": row["full_name"],
+                        "nationality": row["nationality"],
+                        "stats": {
+                            "races": int(row["total_races"]),
+                            "wins": int(row["total_wins"]),
+                            "podiums": int(row["total_podiums"]),
+                            "poles": int(row["total_poles"]),
+                            "titles": int(row["total_titles"]),
+                            "win_rate": round(row["win_rate"], 2),
+                            "podium_rate": round(row["podium_rate"], 2),
+                            "pole_rate": round(row["pole_rate"], 2),
+                            "title_rate": round(row["title_rate"], 2),
+                            "avg_championship_pct": round(row["avg_championship_position_pct"], 2),
+                            "avg_finish": round(row["avg_finish"], 2),
+                        },
                     }
-                })
+                )
 
             tiers[tier_label] = {
                 "count": len(drivers),
@@ -152,7 +139,7 @@ class TierListAnalyzer(BaseAnalyzer):
                 "avg_podium_rate": round(tier_data["podium_rate"].mean(), 2),
                 "avg_pole_rate": round(tier_data["pole_rate"].mean(), 2),  # Добавлено!
                 "avg_finish": round(tier_data["avg_finish"].mean(), 2),
-                "drivers": drivers
+                "drivers": drivers,
             }
 
         return {
@@ -164,7 +151,7 @@ class TierListAnalyzer(BaseAnalyzer):
                 "total_drivers": len(self._result_data),
                 "silhouette_score": round(self._silhouette_score, 3),
             },
-            "tiers": tiers
+            "tiers": tiers,
         }
 
 

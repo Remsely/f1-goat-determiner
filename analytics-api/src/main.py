@@ -33,19 +33,10 @@ app.add_middleware(
 )
 
 
-@app.get(
-    "/",
-    response_model=HealthResponse,
-    summary="Проверка работоспособности",
-    tags=["Health"]
-)
+@app.get("/", response_model=HealthResponse, summary="Проверка работоспособности", tags=["Health"])
 def root():
     """Возвращает информацию о сервере."""
-    return HealthResponse(
-        name=settings.app_name,
-        version=settings.app_version,
-        status="working"
-    )
+    return HealthResponse(name=settings.app_name, version=settings.app_version, status="working")
 
 
 @app.get(
@@ -53,19 +44,14 @@ def root():
     response_model=SeasonsResponse,
     summary="Список сезонов",
     tags=["Data"],
-    responses={500: {"model": ErrorResponse}}
+    responses={500: {"model": ErrorResponse}},
 )
 def get_seasons():
     """Возвращает список всех доступных сезонов F1."""
     try:
         loader = get_data_loader()
         seasons = loader.get_available_seasons()
-        return SeasonsResponse(
-            count=len(seasons),
-            first=seasons[0],
-            last=seasons[-1],
-            seasons=seasons
-        )
+        return SeasonsResponse(count=len(seasons), first=seasons[0], last=seasons[-1], seasons=seasons)
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -75,7 +61,7 @@ def get_seasons():
     response_model=DataStatsResponse,
     summary="Статистика данных",
     tags=["Data"],
-    responses={500: {"model": ErrorResponse}}
+    responses={500: {"model": ErrorResponse}},
 )
 def get_stats():
     """Возвращает общую статистику по данным."""
@@ -86,11 +72,7 @@ def get_stats():
             total_races=len(loader.races()),
             total_drivers=len(loader.drivers()),
             total_results=len(loader.results()),
-            seasons=SeasonStats(
-                first=seasons[0],
-                last=seasons[-1],
-                count=len(seasons)
-            )
+            seasons=SeasonStats(first=seasons[0], last=seasons[-1], count=len(seasons)),
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -101,29 +83,12 @@ def get_stats():
     response_model=TierListResponse,
     summary="Тир-лист пилотов",
     tags=["Analysis"],
-    responses={
-        400: {"model": ErrorResponse},
-        500: {"model": ErrorResponse}
-    }
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
 )
 def get_tier_list(
-    seasons: str | None = Query(
-        None,
-        description="Сезоны через запятую",
-        example="2020,2021,2022,2023,2024"
-    ),
-    n_tiers: int = Query(
-        4,
-        ge=2,
-        le=6,
-        description="Количество тиров (от 2 до 6)"
-    ),
-    min_races: int = Query(
-        10,
-        ge=1,
-        le=100,
-        description="Минимум гонок для включения пилота"
-    )
+    seasons: str | None = Query(None, description="Сезоны через запятую", example="2020,2021,2022,2023,2024"),
+    n_tiers: int = Query(4, ge=2, le=6, description="Количество тиров (от 2 до 6)"),
+    min_races: int = Query(10, ge=1, le=100, description="Минимум гонок для включения пилота"),
 ):
     """
     Генерирует тир-лист пилотов на основе кластеризации K-Means.
@@ -139,17 +104,10 @@ def get_tier_list(
         try:
             season_list = [int(s.strip()) for s in seasons.split(",")]
         except ValueError as e:
-            raise HTTPException(
-                status_code=400,
-                detail="Неверный формат сезонов.  Используйте: 2020,2021,2022"
-            ) from e
+            raise HTTPException(status_code=400, detail="Неверный формат сезонов.  Используйте: 2020,2021,2022") from e
 
     try:
-        analyzer = TierListAnalyzer(
-            seasons=season_list,
-            n_tiers=n_tiers,
-            min_races=min_races
-        )
+        analyzer = TierListAnalyzer(seasons=season_list, n_tiers=n_tiers, min_races=min_races)
         return analyzer.analyze()
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

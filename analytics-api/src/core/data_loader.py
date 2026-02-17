@@ -13,9 +13,7 @@ class F1DataLoader:
     def _validate(self) -> None:
         """Проверяет наличие данных."""
         if not self._data_dir.exists():
-            raise FileNotFoundError(
-                f"Data directory not found: {self._data_dir}"
-            )
+            raise FileNotFoundError(f"Data directory not found: {self._data_dir}")
 
         required_files = [
             "results.csv",
@@ -23,7 +21,7 @@ class F1DataLoader:
             "drivers.csv",
             "driver_standings.csv",
             "constructor_standings.csv",
-            "qualifying.csv"
+            "qualifying.csv",
         ]
 
         missing = [f for f in required_files if not (self._data_dir / f).exists()]
