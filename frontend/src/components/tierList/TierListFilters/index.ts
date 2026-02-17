@@ -1,1 +1,1 @@
-export {TierListFilters} from './TierListFilters';
+export { TierListFilters } from './TierListFilters';

@@ -1,1 +1,1 @@
-export {BadgeLegend} from './BadgeLegend';
+export { BadgeLegend } from './BadgeLegend';

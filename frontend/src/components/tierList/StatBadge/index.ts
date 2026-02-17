@@ -1,2 +1,2 @@
-export {StatBadge} from './StatBadge';
-export type {BadgeType} from './StatBadge';
+export { StatBadge } from './StatBadge';
+export type { BadgeType } from './StatBadge';

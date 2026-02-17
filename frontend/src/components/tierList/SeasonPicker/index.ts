@@ -1,1 +1,1 @@
-export {SeasonPicker} from './SeasonPicker';
+export { SeasonPicker } from './SeasonPicker';

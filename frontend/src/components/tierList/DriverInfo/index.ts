@@ -1,1 +1,1 @@
-export {DriverInfo} from './DriverInfo';
+export { DriverInfo } from './DriverInfo';
