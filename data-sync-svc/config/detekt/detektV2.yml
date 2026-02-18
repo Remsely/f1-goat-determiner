@@ -1,0 +1,71 @@
+config:
+  validation: false
+
+style:
+  active: true
+
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2']
+    excludes: ['**/test/**', '**/*Test.kt', '**/*Spec.kt']
+
+  ReturnCount:
+    active: true
+    max: 3
+    excludeGuardClauses: true
+
+naming:
+  active: true
+
+  FunctionNaming:
+    active: true
+    excludes: ['**/test/**', '**/*Test.kt', '**/*Spec.kt']
+
+potential-bugs:
+  active: true
+
+  LateinitUsage:
+    active: true
+
+complexity:
+  active: true
+
+  LongMethod:
+    active: true
+    allowedLines: 100
+
+  LargeClass:
+    active: true
+    allowedLines: 1000
+
+  LongParameterList:
+    active: true
+    allowedFunctionParameters: 8
+    allowedConstructorParameters: 10
+    ignoreDefaultParameters: true
+
+  TooManyFunctions:
+    active: true
+    ignoredOverridden: false
+    ignorePrivate: false
+
+ktlint:
+  active: true
+
+  autoCorrect: true
+  code_style: 'intellij_idea'
+
+  MaximumLineLength:
+    maxLineLength: 120
+
+  ImportOrdering:
+    layout: '*,java.**,javax.**,kotlin.**,^'
+
+  NoWildcardImports:
+    active: true
+
+  TrailingCommaOnDeclarationSite:
+    active: true
+
+  TrailingCommaOnCallSite:
+    active: true
