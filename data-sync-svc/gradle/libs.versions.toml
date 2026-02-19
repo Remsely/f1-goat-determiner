@@ -1,11 +1,12 @@
 [versions]
 
 # Core
-java = "21"
-kotlin = "2.3.0"
-spring-boot = "4.0.1"
+java = "25"
+kotlin = "2.3.10"
+spring-boot = "4.0.2"
 
-# Utils
+# Lint
+detektV2 = "2.0.0-alpha.2"
 detekt = "1.23.8"
 
 #-----------------------------------------------------------------------------------------------------------------------
@@ -19,6 +20,7 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 # Kotlin
 jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+detektV2-formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detektV2" }
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -33,3 +35,4 @@ spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 
 # Detekt
 detekt-plugin = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detektV2-plugin = { id = "dev.detekt", version.ref = "detektV2" }
