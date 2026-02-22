@@ -120,7 +120,49 @@ JPA/JDBC-репозитории.
 - **Тестирование**: `@SpringBootTest` + Testcontainers + WireMock для end-to-end теста полного цикла. Awaitility для
   асинхронных проверок. Kotest assertions для итоговых проверок состояния БД.
 
-## Шаг 6. Обновить конфигурацию и copilot-instructions
+## Шаг 6. Обновить CI pipeline — lint → build → test
+
+**Текущее состояние:**
+- `pr-check.yml` — только lint (4 сервиса), нет build/test.
+- `main-ci.yml` — lint → Docker build & push. Для `data-sync-svc` Docker build отключен (`if: false`).
+- Lint-ы уже вынесены в reusable workflows (`lint-*.yml`).
+- Цепочка `detect-changes → lint` дублируется между PR и main.
+
+**Что сделать:** Создать reusable workflow `verify-kotlin.yml` для полной цепочки lint → build → test. Использовать его
+в обоих пайплайнах.
+
+- **Новый reusable workflow** `.github/workflows/verify-kotlin.yml`:
+  - Input: `working-directory`.
+  - Jobs (sequential):
+    1. **lint** — `./gradlew detekt` (перенести логику из `lint-kotlin.yml`, сам `lint-kotlin.yml` удалить или
+       оставить как алиас для обратной совместимости).
+    2. **build** — `./gradlew assemble -x test` (компиляция без тестов, быстрая проверка что код собирается).
+    3. **test** — `./gradlew test` с Testcontainers. Нужен Docker в runner'e — использовать `services` или просто
+       Testcontainers с встроенным Docker (GitHub Actions runners уже имеют Docker). Кеширование Gradle через
+       `gradle/actions/setup-gradle@v3`.
+  - Публикация test reports: `actions/upload-artifact@v4` для HTML-отчётов, `EnricoMi/publish-unit-test-result-action`
+    для красивых PR-комментариев с результатами тестов.
+  - Gradle caching: `setup-gradle` уже кеширует `.gradle/caches` и wrapper. Добавить `cache-read-only: true` для PR,
+    `cache-read-only: false` для main.
+
+- **Обновить `pr-check.yml`:**
+  - Заменить `uses: ./.github/workflows/lint-kotlin.yml` на `uses: ./.github/workflows/verify-kotlin.yml`.
+  - Добавить `data-sync-build-test` job аналогично, или вызвать один `verify-kotlin.yml` который делает всё.
+  - Добавить результаты `data-sync-verify` в `pr-check-status`.
+
+- **Обновить `main-ci.yml`:**
+  - Заменить `data-sync-lint` на `uses: ./.github/workflows/verify-kotlin.yml`.
+  - `data-sync-build` (Docker build & push) — теперь `needs: data-sync-verify` вместо `needs: data-sync-lint`.
+    Убрать `if: false` когда Dockerfile будет готов.
+
+- **Опционально** — аналогичный подход для Python (`verify-python.yml`: ruff → pytest) и TypeScript
+  (`verify-typescript.yml`: eslint+prettier → build → vitest), когда в этих сервисах появятся тесты.
+
+- **Java-версия**: в `lint-kotlin.yml` сейчас `java-version: '21'`, а в `libs.versions.toml` указана `java = "25"`.
+  Выровнять на Java 25 (или на LTS 21 — зависит от целевой платформы). Использовать `java-version` из input параметра
+  reusable workflow для гибкости.
+
+## Шаг 7. Обновить конфигурацию и copilot-instructions
 
 **Что сделать:** После реализации фичи обновить `.github/copilot-instructions.md`.
 
@@ -135,6 +177,8 @@ JPA/JDBC-репозитории.
   limiting/retry.
 - Добавить секцию **«Jolpica API Reference»**: эндпоинты, структура ответов, лимиты.
 - Добавить описание конфигурируемых property-ключей (`sync.schedule.cron`, `jolpica.base-url`, `jolpica.rate-limit`).
+- Добавить секцию **«CI Pipeline»**: reusable workflow `verify-kotlin.yml` (lint → build → test), связь с
+  `pr-check.yml` и `main-ci.yml`. Указать что тесты используют Testcontainers и требуют Docker в runner'e.
 
 ## Дополнительные соображения
 
@@ -149,3 +193,5 @@ JPA/JDBC-репозитории.
 3. **Зависимости для добавления в `libs.versions.toml`**: `resilience4j-ratelimiter`, `resilience4j-retry`, `wiremock`,
    `mockk`, `testcontainers`, `shedlock-spring` + `shedlock-provider-jdbc-template`, `awaitility`,
    `kotest-assertions-core`.
+4. **Paths-filter**: в `detect-changes` обоих пайплайнов отсутствует `data-sync-svc/jolpica/**` — добавить при
+   реализации шага 6. Также добавить ссылку на новый `verify-kotlin.yml` в фильтры.
