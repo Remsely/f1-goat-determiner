@@ -6,7 +6,7 @@ plugins {
 dependencies {
     implementation(projects.db)
     implementation(projects.domain)
-    implementation(projects.jolpica)
+//    implementation(projects.jolpica)
     implementation(projects.scheduled)
     implementation(projects.useCase)
 

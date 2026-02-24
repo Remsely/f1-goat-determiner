@@ -10,5 +10,5 @@ data class GrandPrix(
     val circuitId: Int,
     val name: String,
     val date: LocalDate,
-    val time: LocalTime?
+    val time: LocalTime?,
 )

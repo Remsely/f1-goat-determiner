@@ -17,5 +17,4 @@ fun SyncCheckpoint.toEntity() = SyncCheckpointEntity(
     retryCount = retryCount,
 )
 
-
 fun List<SyncCheckpoint>.toEntity(): List<SyncCheckpointEntity> = map { it.toEntity() }

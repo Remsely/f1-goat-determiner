@@ -16,7 +16,7 @@ data class SyncJob(
 ) {
     enum class Type {
         FULL,
-        INCREMENTAL
+        INCREMENTAL,
     }
 
     val isActive: Boolean

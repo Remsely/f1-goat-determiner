@@ -9,6 +9,7 @@ dependencies {
     implementation(projects.domain)
 
     api(libs.spring.boot.starter.data.jpa)
+    api(libs.spring.boot.starter.data.jdbc)
 
     api(libs.bundles.database)
 }

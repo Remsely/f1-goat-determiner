@@ -21,5 +21,5 @@ class CircuitEntity(
     val locality: String?,
 
     @Column
-    val country: String?
+    val country: String?,
 )

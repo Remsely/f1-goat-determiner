@@ -25,15 +25,15 @@ CREATE TABLE sync_checkpoints
                                'CIRCUITS',
                                'CONSTRUCTORS',
                                'DRIVERS',
-                               'RACES',
-                               'RESULTS',
-                               'QUALIFYING',
+                               'GRAND_PRIX',
+                               'RACE_RESULTS',
+                               'QUALIFYING_RESULTS',
                                'DRIVER_STANDINGS',
                                'CONSTRUCTOR_STANDINGS'
             )),
 
     CONSTRAINT chk_sync_checkpoints_status
-        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'SKIPPED'))
+        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'PAUSED', 'SKIPPED'))
 );
 
 CREATE INDEX idx_sync_checkpoints_job_id ON sync_checkpoints (job_id);

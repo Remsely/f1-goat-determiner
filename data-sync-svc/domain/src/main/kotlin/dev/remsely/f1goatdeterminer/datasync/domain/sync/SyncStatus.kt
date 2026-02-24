@@ -5,5 +5,6 @@ enum class SyncStatus {
     IN_PROGRESS,
     COMPLETED,
     FAILED,
-    PAUSED
+    PAUSED,
+    SKIPPED,
 }

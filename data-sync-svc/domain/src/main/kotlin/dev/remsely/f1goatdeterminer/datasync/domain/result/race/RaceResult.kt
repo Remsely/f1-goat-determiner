@@ -2,6 +2,8 @@ package dev.remsely.f1goatdeterminer.datasync.domain.result.race
 
 import java.math.BigDecimal
 
+private const val PODIUM_POSITION = 3
+
 data class RaceResult(
     val id: Int,
     val grandPrixId: Int,
@@ -29,5 +31,5 @@ data class RaceResult(
         get() = position == 1
 
     val isPodium: Boolean
-        get() = position != null && position <= 3
+        get() = position != null && position <= PODIUM_POSITION
 }

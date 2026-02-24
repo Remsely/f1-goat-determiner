@@ -9,7 +9,8 @@ enum class SyncEntityType {
     RACE_RESULTS,
     QUALIFYING_RESULTS,
     DRIVER_STANDINGS,
-    CONSTRUCTOR_STANDINGS;
+    CONSTRUCTOR_STANDINGS,
+    ;
 
     companion object {
         /**

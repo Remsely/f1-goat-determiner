@@ -1,7 +1,7 @@
 [versions]
 
 # Core
-java = "25"
+java = "21"
 kotlin = "2.3.10"
 spring-boot = "4.0.2"
 
@@ -16,6 +16,7 @@ detekt = "1.23.8"
 # Spring Boot starters
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-boot-starter-data-jdbc = { module = "org.springframework.boot:spring-boot-starter-data-jdbc" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 
