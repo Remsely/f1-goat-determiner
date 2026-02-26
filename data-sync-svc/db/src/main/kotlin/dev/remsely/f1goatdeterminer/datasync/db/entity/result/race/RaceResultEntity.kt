@@ -13,34 +13,34 @@ class RaceResultEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val raceId: Int,
 
-    @Column
+    @Column(nullable = false)
     val driverId: Int,
 
-    @Column
+    @Column(nullable = false)
     val constructorId: Int,
 
     @Column
     val number: Int?,
 
-    @Column
+    @Column(nullable = false)
     val grid: Int,
 
     @Column
     val position: Int?,
 
-    @Column
+    @Column(nullable = false)
     val positionText: String,
 
-    @Column
+    @Column(nullable = false)
     val positionOrder: Int,
 
-    @Column
+    @Column(nullable = false)
     val points: BigDecimal,
 
-    @Column
+    @Column(nullable = false)
     val laps: Int,
 
     @Column
@@ -61,6 +61,6 @@ class RaceResultEntity(
     @Column
     val fastestLapSpeed: BigDecimal?,
 
-    @Column
+    @Column(nullable = false)
     val statusId: Int,
 )

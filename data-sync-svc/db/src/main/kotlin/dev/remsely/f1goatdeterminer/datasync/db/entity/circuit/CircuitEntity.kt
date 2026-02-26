@@ -11,10 +11,10 @@ class CircuitEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val ref: String,
 
-    @Column
+    @Column(nullable = false)
     val name: String,
 
     @Column

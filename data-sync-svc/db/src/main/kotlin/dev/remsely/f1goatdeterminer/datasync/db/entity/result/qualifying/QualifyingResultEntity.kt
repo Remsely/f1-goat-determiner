@@ -11,19 +11,19 @@ class QualifyingResultEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val raceId: Int,
 
-    @Column
+    @Column(nullable = false)
     val driverId: Int,
 
-    @Column
+    @Column(nullable = false)
     val constructorId: Int,
 
     @Column
     val number: Int?,
 
-    @Column
+    @Column(nullable = false)
     val position: Int,
 
     @Column

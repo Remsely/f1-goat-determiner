@@ -19,18 +19,18 @@ class SyncJobEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val type: SyncJob.Type,
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: SyncStatus,
 
-    @Column
+    @Column(nullable = false)
     val startedAt: LocalDateTime,
 
-    @Column
+    @Column(nullable = false)
     var updatedAt: LocalDateTime,
 
     @Column
@@ -39,9 +39,9 @@ class SyncJobEntity(
     @Column
     var errorMessage: String?,
 
-    @Column
+    @Column(nullable = false)
     var totalRequests: Int,
 
-    @Column
+    @Column(nullable = false)
     var failedRequests: Int,
 )

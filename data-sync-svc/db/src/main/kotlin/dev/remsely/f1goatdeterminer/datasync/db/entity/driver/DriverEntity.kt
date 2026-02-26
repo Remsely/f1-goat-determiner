@@ -12,7 +12,7 @@ class DriverEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val ref: String,
 
     @Column
@@ -21,10 +21,10 @@ class DriverEntity(
     @Column
     val code: String?,
 
-    @Column
+    @Column(nullable = false)
     val forename: String,
 
-    @Column
+    @Column(nullable = false)
     val surname: String,
 
     @Column

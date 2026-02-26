@@ -20,18 +20,18 @@ class SyncCheckpointEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column
+    @Column(nullable = false)
     val jobId: Long,
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val entityType: SyncEntityType,
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: SyncStatus,
 
-    @Column
+    @Column(nullable = false)
     var lastOffset: Int,
 
     @Column
@@ -40,7 +40,7 @@ class SyncCheckpointEntity(
     @Column
     var lastRound: Int?,
 
-    @Column
+    @Column(nullable = false)
     var recordsSynced: Int,
 
     @Column
@@ -52,6 +52,6 @@ class SyncCheckpointEntity(
     @Column
     var errorMessage: String?,
 
-    @Column
+    @Column(nullable = false)
     var retryCount: Int,
 )

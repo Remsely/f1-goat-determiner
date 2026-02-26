@@ -37,7 +37,7 @@ interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
     )
     fun findResumableByType(type: SyncJob.Type): List<SyncJobEntity>
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncJobEntity j
@@ -52,7 +52,7 @@ interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
         errorMessage: String? = null,
     )
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncJobEntity j
@@ -67,7 +67,7 @@ interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
         updatedAt: LocalDateTime = LocalDateTime.now(),
     )
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncJobEntity j

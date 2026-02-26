@@ -9,6 +9,10 @@ spring-boot = "4.0.2"
 detektV2 = "2.0.0-alpha.2"
 detekt = "1.23.8"
 
+# Testing
+kotest = "6.1.4"
+mockk = "1.14.9"
+
 #-----------------------------------------------------------------------------------------------------------------------
 
 [libraries]
@@ -17,8 +21,10 @@ detekt = "1.23.8"
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 spring-boot-starter-data-jdbc = { module = "org.springframework.boot:spring-boot-starter-data-jdbc" }
+spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
 
 # Kotlin
 jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
@@ -27,8 +33,16 @@ detektV2-formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", versi
 
 # Database
 postgresql = { module = "org.postgresql:postgresql" }
-flyway-core = { module = "org.flywaydb:flyway-core" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
+
+# Testing
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
+kotest-bom = { module = "io.kotest:kotest-bom", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -50,4 +64,13 @@ detektV2-plugin = { id = "dev.detekt", version.ref = "detektV2" }
 
 [bundles]
 
-database = ["postgresql", "flyway-core", "flyway-database-postgresql"]
+database = [
+  "postgresql",
+  "flyway-database-postgresql"
+]
+
+testcontainers = [
+  "testcontainers-junit-jupiter",
+  "testcontainers-postgresql",
+  "spring-boot-testcontainers"
+]

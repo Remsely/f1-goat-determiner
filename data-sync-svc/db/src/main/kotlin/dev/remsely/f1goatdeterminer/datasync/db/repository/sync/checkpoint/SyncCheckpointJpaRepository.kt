@@ -18,7 +18,7 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
 
     fun findByJobIdAndStatus(jobId: Long, status: SyncStatus): List<SyncCheckpointEntity>
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncCheckpointEntity c
@@ -28,7 +28,7 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
     )
     fun updateStatus(id: Long, status: SyncStatus, errorMessage: String? = null)
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncCheckpointEntity c
@@ -41,11 +41,11 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
     )
     fun updateProgress(id: Long, lastOffset: Int?, lastSeason: Int?, lastRound: Int?, recordsSynced: Int)
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE SyncCheckpointEntity c SET c.retryCount = c.retryCount + 1 WHERE c.id = :id")
     fun incrementRetryCount(id: Long)
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncCheckpointEntity c
@@ -55,7 +55,7 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
     )
     fun complete(id: Long, recordsSynced: Int, completedAt: LocalDateTime = LocalDateTime.now())
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncCheckpointEntity c

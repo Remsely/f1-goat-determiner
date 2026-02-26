@@ -12,21 +12,21 @@ class ConstructorStandingEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val raceId: Int,
 
-    @Column
+    @Column(nullable = false)
     val constructorId: Int,
 
-    @Column
+    @Column(nullable = false)
     val points: BigDecimal,
 
-    @Column
+    @Column(nullable = false)
     val position: Int,
 
-    @Column
+    @Column(nullable = false)
     val positionText: String,
 
-    @Column
+    @Column(nullable = false)
     val wins: Int,
 )

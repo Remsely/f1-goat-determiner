@@ -13,19 +13,19 @@ class GrandPrixEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val season: Int,
 
-    @Column
+    @Column(nullable = false)
     val round: Int,
 
-    @Column
+    @Column(nullable = false)
     val circuitId: Int,
 
-    @Column
+    @Column(nullable = false)
     val name: String,
 
-    @Column
+    @Column(nullable = false)
     val date: LocalDate,
 
     @Column

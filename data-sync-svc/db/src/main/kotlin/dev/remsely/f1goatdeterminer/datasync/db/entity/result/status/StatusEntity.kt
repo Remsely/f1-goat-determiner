@@ -11,6 +11,6 @@ class StatusEntity(
     @Id
     val id: Int,
 
-    @Column
+    @Column(nullable = false)
     val status: String,
 )
