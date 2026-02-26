@@ -24,7 +24,6 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
           batch_size: 50
@@ -40,3 +39,13 @@ spring:
 logging:
   level:
     root: INFO
+
+jolpica:
+  base-url: https://api.jolpi.ca/ergast/f1
+  connect-timeout: 10s
+  read-timeout: 30s
+  page-size: 100
+  rate-limit: 4
+  retry-max-attempts: 3
+  retry-wait-duration: 2s
+

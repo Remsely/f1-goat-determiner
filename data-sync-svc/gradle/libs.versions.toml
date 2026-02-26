@@ -5,6 +5,9 @@ java = "21"
 kotlin = "2.3.10"
 spring-boot = "4.0.2"
 
+# Resilience
+resilience4j = "2.3.0"
+
 # Lint
 detektV2 = "2.0.0-alpha.2"
 detekt = "1.23.8"
@@ -12,6 +15,7 @@ detekt = "1.23.8"
 # Testing
 kotest = "6.1.4"
 mockk = "1.14.9"
+wiremock = "3.13.2"
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -19,6 +23,7 @@ mockk = "1.14.9"
 
 # Spring Boot starters
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 spring-boot-starter-data-jdbc = { module = "org.springframework.boot:spring-boot-starter-data-jdbc" }
 spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
@@ -30,6 +35,11 @@ spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-
 jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 detektV2-formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detektV2" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
+
+# Resilience
+resilience4j-ratelimiter = { module = "io.github.resilience4j:resilience4j-ratelimiter", version.ref = "resilience4j" }
+resilience4j-retry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
 
 # Database
 postgresql = { module = "org.postgresql:postgresql" }
@@ -43,6 +53,7 @@ kotest-bom = { module = "io.kotest:kotest-bom", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
 
 #-----------------------------------------------------------------------------------------------------------------------
 
