@@ -1,3 +1,51 @@
 spring:
   application:
-    name: app
+    name: data-sync-svc
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:f1_goat_determiner}
+    username: ${DB_USERNAME:f1user}
+    password: ${DB_PASSWORD:f1password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      pool-name: f1-hikari-pool
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+logging:
+  level:
+    root: INFO
+
+jolpica:
+  base-url: https://api.jolpi.ca/ergast/f1
+  connect-timeout: 10s
+  read-timeout: 30s
+  page-size: 100
+  rate-limit: 4
+  retry-max-attempts: 3
+  retry-wait-duration: 2s
+

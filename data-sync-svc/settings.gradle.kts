@@ -12,6 +12,7 @@ include(
     "app",
     "db",
     "domain",
+    "jolpica",
     "scheduled",
     "use-case",
 )

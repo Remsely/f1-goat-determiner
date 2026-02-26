@@ -14,3 +14,9 @@ val Project.javaVersion: JavaVersion
 
 fun DependencyHandlerScope.implementation(dependencyNotation: Any) =
     add("implementation", dependencyNotation)
+
+fun DependencyHandlerScope.testImplementation(dependencyNotation: Any) =
+    add("testImplementation", dependencyNotation)
+
+fun DependencyHandlerScope.testRuntimeOnly(dependencyNotation: Any) =
+    add("testRuntimeOnly", dependencyNotation)

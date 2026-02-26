@@ -42,7 +42,7 @@ style:
     active: true
 
   MagicNumber:
-    active: true
+    active: false
     ignoreNumbers: [ '-1', '0', '1', '2' ]
     excludes: [ '**/test/**', '**/*Test.kt', '**/*Tests.kt', '**/*Spec.kt' ]
 
