@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.jolpica.config
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
 
-@ConfigurationProperties(prefix = "jolpica")
+@ConfigurationProperties(prefix = "integration.jolpica")
 data class JolpicaClientProperties(
     val baseUrl: String,
     val connectTimeout: Duration,

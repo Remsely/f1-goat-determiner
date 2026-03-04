@@ -1,7 +1,7 @@
 package dev.remsely.f1goatdeterminer.datasync.domain.circuit
 
 data class Circuit(
-    val id: Int,
+    val id: Int? = null,
     val ref: String,
     val name: String,
     val locality: String?,

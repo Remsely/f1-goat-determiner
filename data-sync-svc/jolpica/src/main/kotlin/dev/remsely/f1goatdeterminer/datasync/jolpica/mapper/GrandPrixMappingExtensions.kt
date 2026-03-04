@@ -1,15 +1,14 @@
 package dev.remsely.f1goatdeterminer.datasync.jolpica.mapper
 
-import dev.remsely.f1goatdeterminer.datasync.domain.grandprix.GrandPrix
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.RaceDto
+import dev.remsely.f1goatdeterminer.datasync.usecase.port.FetchedGrandPrix
 import java.time.LocalDate
 import java.time.LocalTime
 
-fun RaceDto.toGrandPrix(id: Int, circuitId: Int): GrandPrix = GrandPrix(
-    id = id,
+fun RaceDto.toFetchedGrandPrix(): FetchedGrandPrix = FetchedGrandPrix(
     season = season.toInt(),
     round = round.toInt(),
-    circuitId = circuitId,
+    circuitRef = circuit.circuitId,
     name = raceName,
     date = LocalDate.parse(date),
     time = time?.let { parseTime(it) },

@@ -15,9 +15,9 @@ class CircuitMappingExtensionsTest {
             location = LocationDto(locality = "Monza", country = "Italy"),
         )
 
-        val result = dto.toDomain(id = 42)
+        val result = dto.toDomain()
 
-        result.id shouldBe 42
+        result.id.shouldBeNull()
         result.ref shouldBe "monza"
         result.name shouldBe "Autodromo Nazionale Monza"
         result.locality shouldBe "Monza"
@@ -32,7 +32,7 @@ class CircuitMappingExtensionsTest {
             location = null,
         )
 
-        val result = dto.toDomain(id = 1)
+        val result = dto.toDomain()
 
         result.locality.shouldBeNull()
         result.country.shouldBeNull()

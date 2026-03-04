@@ -13,7 +13,7 @@ class QualifyingResultMappingExtensionsTest {
     private val constructor = ConstructorDto(constructorId = "red_bull", name = "Red Bull")
 
     @Test
-    fun `toDomain maps all fields correctly`() {
+    fun `toFetchedQualifyingResult maps all fields correctly`() {
         val dto = QualifyingResultDto(
             number = "1",
             position = "1",
@@ -24,12 +24,12 @@ class QualifyingResultMappingExtensionsTest {
             q3 = "1:29.179",
         )
 
-        val result = dto.toDomain(id = 1, grandPrixId = 100, driverId = 10, constructorId = 20)
+        val result = dto.toFetchedQualifyingResult(season = 2024, round = 1)
 
-        result.id shouldBe 1
-        result.grandPrixId shouldBe 100
-        result.driverId shouldBe 10
-        result.constructorId shouldBe 20
+        result.season shouldBe 2024
+        result.round shouldBe 1
+        result.driverRef shouldBe "max_verstappen"
+        result.constructorRef shouldBe "red_bull"
         result.number shouldBe 1
         result.position shouldBe 1
         result.q1 shouldBe "1:30.031"
@@ -38,7 +38,7 @@ class QualifyingResultMappingExtensionsTest {
     }
 
     @Test
-    fun `toDomain handles eliminated in Q1 with null Q2 and Q3`() {
+    fun `toFetchedQualifyingResult handles eliminated in Q1 with null Q2 and Q3`() {
         val dto = QualifyingResultDto(
             number = "2",
             position = "20",
@@ -49,7 +49,7 @@ class QualifyingResultMappingExtensionsTest {
             q3 = null,
         )
 
-        val result = dto.toDomain(id = 2, grandPrixId = 100, driverId = 10, constructorId = 20)
+        val result = dto.toFetchedQualifyingResult(season = 2024, round = 1)
 
         result.position shouldBe 20
         result.q1 shouldBe "1:32.500"

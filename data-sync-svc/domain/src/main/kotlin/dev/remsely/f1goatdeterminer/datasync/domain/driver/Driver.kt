@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.domain.driver
 import java.time.LocalDate
 
 data class Driver(
-    val id: Int,
+    val id: Int? = null,
     val ref: String,
     val number: Int?,
     val code: String?,

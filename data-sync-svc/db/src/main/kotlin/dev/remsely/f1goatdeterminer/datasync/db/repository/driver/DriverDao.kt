@@ -14,6 +14,13 @@ class DriverDao(
 
     override fun findById(id: Int): Driver? = jpaRepository.findById(id).orElse(null)?.toDomain()
 
+    override fun findByRef(ref: String): Driver? = jpaRepository.findByRef(ref)?.toDomain()
+
+    override fun findIdByRef(ref: String): Int? = jpaRepository.findByRef(ref)?.id
+
+    override fun findAllRefToId(): Map<String, Int> =
+        jpaRepository.findAll().associate { it.ref to it.id!! }
+
     override fun count(): Long = jpaRepository.count()
 
     override fun upsertAll(drivers: List<Driver>): Int = jdbcRepository.upsertAll(drivers)

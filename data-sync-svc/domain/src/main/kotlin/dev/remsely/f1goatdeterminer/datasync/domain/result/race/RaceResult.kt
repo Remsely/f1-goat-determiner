@@ -2,10 +2,8 @@ package dev.remsely.f1goatdeterminer.datasync.domain.result.race
 
 import java.math.BigDecimal
 
-private const val PODIUM_POSITION = 3
-
 data class RaceResult(
-    val id: Int,
+    val id: Int? = null,
     val grandPrixId: Int,
     val driverId: Int,
     val constructorId: Int,
@@ -23,13 +21,4 @@ data class RaceResult(
     val fastestLapTime: String?,
     val fastestLapSpeed: BigDecimal?,
     val statusId: Int,
-) {
-    val isClassified: Boolean
-        get() = position != null
-
-    val isWin: Boolean
-        get() = position == 1
-
-    val isPodium: Boolean
-        get() = position != null && position <= PODIUM_POSITION
-}
+)

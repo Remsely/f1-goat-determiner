@@ -40,12 +40,12 @@ logging:
   level:
     root: INFO
 
-jolpica:
-  base-url: https://api.jolpi.ca/ergast/f1
-  connect-timeout: 10s
-  read-timeout: 30s
-  page-size: 100
-  rate-limit: 4
-  retry-max-attempts: 3
-  retry-wait-duration: 2s
-
+integration:
+  jolpica:
+    base-url: https://api.jolpi.ca/ergast/f1
+    connect-timeout: 10s
+    read-timeout: 30s
+    page-size: 100
+    rate-limit: 4
+    retry-max-attempts: 3
+    retry-wait-duration: 2s

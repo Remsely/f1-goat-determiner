@@ -4,8 +4,7 @@ import dev.remsely.f1goatdeterminer.datasync.domain.driver.Driver
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.DriverDto
 import java.time.LocalDate
 
-fun DriverDto.toDomain(id: Int): Driver = Driver(
-    id = id,
+fun DriverDto.toDomain(): Driver = Driver(
     ref = driverId,
     number = permanentNumber?.toIntOrNull(),
     code = code,

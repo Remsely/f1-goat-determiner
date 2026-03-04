@@ -14,4 +14,5 @@ dependencies {
     implementation(libs.jetbrains.kotlin.reflect)
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.bundles.testcontainers)
 }

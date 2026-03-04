@@ -2,6 +2,8 @@ package dev.remsely.f1goatdeterminer.datasync.db.entity.result.race
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.math.BigDecimal
@@ -11,7 +13,8 @@ import java.math.BigDecimal
 @Suppress("LongParameterList")
 class RaceResultEntity(
     @Id
-    val id: Int,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
 
     @Column(nullable = false)
     val raceId: Int,

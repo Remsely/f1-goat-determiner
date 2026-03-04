@@ -1,20 +1,15 @@
 package dev.remsely.f1goatdeterminer.datasync.jolpica.mapper
 
-import dev.remsely.f1goatdeterminer.datasync.domain.result.race.RaceResult
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.ResultDto
+import dev.remsely.f1goatdeterminer.datasync.usecase.port.FetchedRaceResult
 import java.math.BigDecimal
 
-fun ResultDto.toDomain(
-    id: Int,
-    grandPrixId: Int,
-    driverId: Int,
-    constructorId: Int,
-    statusId: Int,
-): RaceResult = RaceResult(
-    id = id,
-    grandPrixId = grandPrixId,
-    driverId = driverId,
-    constructorId = constructorId,
+fun ResultDto.toFetchedRaceResult(season: Int, round: Int): FetchedRaceResult = FetchedRaceResult(
+    season = season,
+    round = round,
+    driverRef = driver.driverId,
+    constructorRef = constructor.constructorId,
+    statusText = status,
     number = number?.toIntOrNull(),
     grid = grid.toInt(),
     position = position?.toIntOrNull(),
@@ -28,5 +23,4 @@ fun ResultDto.toDomain(
     fastestLapRank = fastestLap?.rank?.toIntOrNull(),
     fastestLapTime = fastestLap?.time?.time,
     fastestLapSpeed = fastestLap?.averageSpeed?.speed?.let { BigDecimal(it) },
-    statusId = statusId,
 )

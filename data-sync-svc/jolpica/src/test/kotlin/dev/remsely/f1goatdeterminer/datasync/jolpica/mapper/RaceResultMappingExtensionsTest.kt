@@ -18,7 +18,7 @@ class RaceResultMappingExtensionsTest {
     private val constructor = ConstructorDto(constructorId = "mercedes", name = "Mercedes")
 
     @Test
-    fun `toDomain maps all fields correctly for classified result`() {
+    fun `toFetchedRaceResult maps all fields correctly for classified result`() {
         val dto = ResultDto(
             number = "44",
             position = "1",
@@ -38,18 +38,13 @@ class RaceResultMappingExtensionsTest {
             ),
         )
 
-        val result = dto.toDomain(
-            id = 1,
-            grandPrixId = 100,
-            driverId = 10,
-            constructorId = 20,
-            statusId = 1,
-        )
+        val result = dto.toFetchedRaceResult(season = 2024, round = 1)
 
-        result.id shouldBe 1
-        result.grandPrixId shouldBe 100
-        result.driverId shouldBe 10
-        result.constructorId shouldBe 20
+        result.season shouldBe 2024
+        result.round shouldBe 1
+        result.driverRef shouldBe "hamilton"
+        result.constructorRef shouldBe "mercedes"
+        result.statusText shouldBe "Finished"
         result.number shouldBe 44
         result.grid shouldBe 1
         result.position shouldBe 1
@@ -63,11 +58,10 @@ class RaceResultMappingExtensionsTest {
         result.fastestLapRank shouldBe 1
         result.fastestLapTime shouldBe "1:32.608"
         result.fastestLapSpeed shouldBe BigDecimal("210.383")
-        result.statusId shouldBe 1
     }
 
     @Test
-    fun `toDomain handles retired driver with null position and no fastest lap`() {
+    fun `toFetchedRaceResult handles retired driver with null position and no fastest lap`() {
         val dto = ResultDto(
             number = "44",
             position = null,
@@ -82,13 +76,7 @@ class RaceResultMappingExtensionsTest {
             fastestLap = null,
         )
 
-        val result = dto.toDomain(
-            id = 2,
-            grandPrixId = 100,
-            driverId = 10,
-            constructorId = 20,
-            statusId = 5,
-        )
+        val result = dto.toFetchedRaceResult(season = 2024, round = 1)
 
         result.position.shouldBeNull()
         result.positionText shouldBe "R"

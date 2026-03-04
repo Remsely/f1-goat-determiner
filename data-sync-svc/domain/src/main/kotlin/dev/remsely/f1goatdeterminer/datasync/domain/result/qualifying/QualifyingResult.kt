@@ -1,7 +1,7 @@
 package dev.remsely.f1goatdeterminer.datasync.domain.result.qualifying
 
 data class QualifyingResult(
-    val id: Int,
+    val id: Int? = null,
     val grandPrixId: Int,
     val driverId: Int,
     val constructorId: Int,

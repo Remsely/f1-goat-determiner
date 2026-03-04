@@ -1,3 +1,4 @@
+import extensions.annotationProcessor
 import extensions.implementation
 import extensions.libs
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
@@ -10,4 +11,7 @@ apply(plugin = libs.plugins.kotlin.spring.get().pluginId)
 
 dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
+    annotationProcessor(platform(SpringBootPlugin.BOM_COORDINATES))
+
+    annotationProcessor(libs.spring.boot.configuration.processor)
 }

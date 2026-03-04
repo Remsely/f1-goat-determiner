@@ -3,6 +3,8 @@ package dev.remsely.f1goatdeterminer.datasync.domain.grandprix
 interface GrandPrixFinder {
     fun findById(id: Int): GrandPrix?
     fun findBySeasonAndRound(season: Int, round: Int): GrandPrix?
+    fun findIdBySeasonAndRound(season: Int, round: Int): Int?
+    fun findAllSeasonRoundToId(): Map<Pair<Int, Int>, Int>
     fun findMaxRoundBySeason(season: Int): Int?
     fun findAllSeasons(): List<Int>
     fun count(): Long

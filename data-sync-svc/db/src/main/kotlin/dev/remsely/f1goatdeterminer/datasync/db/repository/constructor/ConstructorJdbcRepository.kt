@@ -10,19 +10,17 @@ class ConstructorJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
         if (constructors.isEmpty()) return 0
 
         val sql = """
-            INSERT INTO constructors (id, ref, name, nationality)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT (id) DO UPDATE SET
-                ref = EXCLUDED.ref,
+            INSERT INTO constructors (ref, name, nationality)
+            VALUES (?, ?, ?)
+            ON CONFLICT (ref) DO UPDATE SET
                 name = EXCLUDED.name,
                 nationality = EXCLUDED.nationality
         """.trimIndent()
 
         return jdbcTemplate.batchUpdate(sql, constructors, constructors.size) { ps, c ->
-            ps.setInt(1, c.id)
-            ps.setString(2, c.ref)
-            ps.setString(3, c.name)
-            ps.setString(4, c.nationality)
+            ps.setString(1, c.ref)
+            ps.setString(2, c.name)
+            ps.setString(3, c.nationality)
         }.sumOf { it.sum() }
     }
 }

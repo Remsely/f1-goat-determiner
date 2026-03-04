@@ -42,30 +42,27 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
         circuitJpaRepository.deleteAllInBatch()
     }
 
-    private fun insertCircuit(): Circuit {
-        val circuit = Circuit(id = 1, ref = "monza", name = "Monza", locality = "Monza", country = "Italy")
-        circuitDao.upsertAll(listOf(circuit))
-        return circuit
+    private fun insertCircuit(): Int {
+        circuitDao.upsertAll(listOf(Circuit(ref = "monza", name = "Monza", locality = "Monza", country = "Italy")))
+        return circuitDao.findIdByRef("monza")!!
     }
 
     @Test
     fun `upsertAll inserts grand prix`() {
-        insertCircuit()
+        val circuitId = insertCircuit()
         val races = listOf(
             GrandPrix(
-                id = 1,
                 season = 2024,
                 round = 1,
-                circuitId = 1,
+                circuitId = circuitId,
                 name = "Bahrain GP",
                 date = LocalDate.of(2024, 3, 2),
                 time = LocalTime.of(15, 0),
             ),
             GrandPrix(
-                id = 2,
                 season = 2024,
                 round = 2,
-                circuitId = 1,
+                circuitId = circuitId,
                 name = "Saudi Arabian GP",
                 date = LocalDate.of(2024, 3, 9),
                 time = null,
@@ -77,23 +74,21 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `findBySeasonAndRound returns correct grand prix`() {
-        insertCircuit()
+        val circuitId = insertCircuit()
         dao.upsertAll(
             listOf(
                 GrandPrix(
-                    id = 1,
                     season = 2024,
                     round = 1,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "Bahrain GP",
                     date = LocalDate.of(2024, 3, 2),
                     time = null,
                 ),
                 GrandPrix(
-                    id = 2,
                     season = 2024,
                     round = 2,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "Saudi Arabian GP",
                     date = LocalDate.of(2024, 3, 9),
                     time = null,
@@ -114,32 +109,29 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `findMaxRoundBySeason returns max round`() {
-        insertCircuit()
+        val circuitId = insertCircuit()
         dao.upsertAll(
             listOf(
                 GrandPrix(
-                    id = 1,
                     season = 2024,
                     round = 1,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "R1",
                     date = LocalDate.of(2024, 3, 2),
                     time = null,
                 ),
                 GrandPrix(
-                    id = 2,
                     season = 2024,
                     round = 5,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "R5",
                     date = LocalDate.of(2024, 5, 2),
                     time = null,
                 ),
                 GrandPrix(
-                    id = 3,
                     season = 2024,
                     round = 3,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "R3",
                     date = LocalDate.of(2024, 4, 2),
                     time = null,
@@ -156,32 +148,29 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `findAllSeasons returns distinct sorted seasons`() {
-        insertCircuit()
+        val circuitId = insertCircuit()
         dao.upsertAll(
             listOf(
                 GrandPrix(
-                    id = 1,
                     season = 2023,
                     round = 1,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "R1",
                     date = LocalDate.of(2023, 3, 2),
                     time = null,
                 ),
                 GrandPrix(
-                    id = 2,
                     season = 2024,
                     round = 1,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "R1",
                     date = LocalDate.of(2024, 3, 2),
                     time = null,
                 ),
                 GrandPrix(
-                    id = 3,
                     season = 2023,
                     round = 2,
-                    circuitId = 1,
+                    circuitId = circuitId,
                     name = "R2",
                     date = LocalDate.of(2023, 4, 2),
                     time = null,

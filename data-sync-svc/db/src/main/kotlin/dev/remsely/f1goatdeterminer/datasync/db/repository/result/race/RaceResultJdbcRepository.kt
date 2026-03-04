@@ -7,20 +7,19 @@ import java.sql.Types
 
 @Component
 class RaceResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
+    @Suppress("LongMethod")
     fun upsertAll(results: List<RaceResult>): Int {
         if (results.isEmpty()) return 0
 
         val sql = """
             INSERT INTO results (
-                id, race_id, driver_id, constructor_id, number, grid,
+                race_id, driver_id, constructor_id, number, grid,
                 position, position_text, position_order, points, laps,
                 time, milliseconds, fastest_lap, fastest_lap_rank,
                 fastest_lap_time, fastest_lap_speed, status_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (id) DO UPDATE SET
-                race_id = EXCLUDED.race_id,
-                driver_id = EXCLUDED.driver_id,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (race_id, driver_id) DO UPDATE SET
                 constructor_id = EXCLUDED.constructor_id,
                 number = EXCLUDED.number,
                 grid = EXCLUDED.grid,
@@ -46,32 +45,31 @@ class RaceResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
             val fastestLapRank = r.fastestLapRank
             val fastestLapSpeed = r.fastestLapSpeed
 
-            ps.setInt(1, r.id)
-            ps.setInt(2, r.grandPrixId)
-            ps.setInt(3, r.driverId)
-            ps.setInt(4, r.constructorId)
+            ps.setInt(1, r.grandPrixId)
+            ps.setInt(2, r.driverId)
+            ps.setInt(3, r.constructorId)
 
-            if (number != null) ps.setInt(5, number) else ps.setNull(5, Types.INTEGER)
+            if (number != null) ps.setInt(4, number) else ps.setNull(4, Types.INTEGER)
 
-            ps.setInt(6, r.grid)
+            ps.setInt(5, r.grid)
 
-            if (position != null) ps.setInt(7, position) else ps.setNull(7, Types.INTEGER)
+            if (position != null) ps.setInt(6, position) else ps.setNull(6, Types.INTEGER)
 
-            ps.setString(8, r.positionText)
-            ps.setInt(9, r.positionOrder)
-            ps.setBigDecimal(10, r.points)
-            ps.setInt(11, r.laps)
-            ps.setString(12, r.time)
+            ps.setString(7, r.positionText)
+            ps.setInt(8, r.positionOrder)
+            ps.setBigDecimal(9, r.points)
+            ps.setInt(10, r.laps)
+            ps.setString(11, r.time)
 
-            if (milliseconds != null) ps.setLong(13, milliseconds) else ps.setNull(13, Types.BIGINT)
-            if (fastestLap != null) ps.setInt(14, fastestLap) else ps.setNull(14, Types.INTEGER)
-            if (fastestLapRank != null) ps.setInt(15, fastestLapRank) else ps.setNull(15, Types.INTEGER)
+            if (milliseconds != null) ps.setLong(12, milliseconds) else ps.setNull(12, Types.BIGINT)
+            if (fastestLap != null) ps.setInt(13, fastestLap) else ps.setNull(13, Types.INTEGER)
+            if (fastestLapRank != null) ps.setInt(14, fastestLapRank) else ps.setNull(14, Types.INTEGER)
 
-            ps.setString(16, r.fastestLapTime)
+            ps.setString(15, r.fastestLapTime)
 
-            if (fastestLapSpeed != null) ps.setBigDecimal(17, fastestLapSpeed) else ps.setNull(17, Types.DECIMAL)
+            if (fastestLapSpeed != null) ps.setBigDecimal(16, fastestLapSpeed) else ps.setNull(16, Types.DECIMAL)
 
-            ps.setInt(18, r.statusId)
+            ps.setInt(17, r.statusId)
         }.sumOf { it.sum() }
     }
 }

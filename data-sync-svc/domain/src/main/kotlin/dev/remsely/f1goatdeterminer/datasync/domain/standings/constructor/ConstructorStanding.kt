@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.domain.standings.constructor
 import java.math.BigDecimal
 
 data class ConstructorStanding(
-    val id: Int,
+    val id: Int? = null,
     val grandPrixId: Int,
     val constructorId: Int,
     val points: BigDecimal,

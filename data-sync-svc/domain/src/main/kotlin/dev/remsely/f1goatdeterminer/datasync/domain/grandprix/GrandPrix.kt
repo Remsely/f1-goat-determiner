@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 data class GrandPrix(
-    val id: Int,
+    val id: Int? = null,
     val season: Int,
     val round: Int,
     val circuitId: Int,

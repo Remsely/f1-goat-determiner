@@ -13,11 +13,9 @@ class GrandPrixJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
         if (grandPrixList.isEmpty()) return 0
 
         val sql = """
-            INSERT INTO races (id, season, round, circuit_id, name, date, time)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (id) DO UPDATE SET
-                season = EXCLUDED.season,
-                round = EXCLUDED.round,
+            INSERT INTO races (season, round, circuit_id, name, date, time)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT (season, round) DO UPDATE SET
                 circuit_id = EXCLUDED.circuit_id,
                 name = EXCLUDED.name,
                 date = EXCLUDED.date,
@@ -27,14 +25,13 @@ class GrandPrixJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
         return jdbcTemplate.batchUpdate(sql, grandPrixList, grandPrixList.size) { ps, gp ->
             val time = gp.time
 
-            ps.setInt(1, gp.id)
-            ps.setInt(2, gp.season)
-            ps.setInt(3, gp.round)
-            ps.setInt(4, gp.circuitId)
-            ps.setString(5, gp.name)
-            ps.setDate(6, Date.valueOf(gp.date))
+            ps.setInt(1, gp.season)
+            ps.setInt(2, gp.round)
+            ps.setInt(3, gp.circuitId)
+            ps.setString(4, gp.name)
+            ps.setDate(5, Date.valueOf(gp.date))
 
-            if (time != null) ps.setTime(7, Time.valueOf(time)) else ps.setNull(7, Types.TIME)
+            if (time != null) ps.setTime(6, Time.valueOf(time)) else ps.setNull(6, Types.TIME)
         }.sumOf { it.sum() }
     }
 }

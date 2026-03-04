@@ -27,8 +27,8 @@ class CircuitDaoTest : BaseRepositoryTest() {
     @Test
     fun `upsertAll inserts new circuits`() {
         val circuits = listOf(
-            Circuit(id = 1, ref = "monza", name = "Monza", locality = "Monza", country = "Italy"),
-            Circuit(id = 2, ref = "spa", name = "Spa-Francorchamps", locality = "Spa", country = "Belgium"),
+            Circuit(ref = "monza", name = "Monza", locality = "Monza", country = "Italy"),
+            Circuit(ref = "spa", name = "Spa-Francorchamps", locality = "Spa", country = "Belgium"),
         )
 
         val result = dao.upsertAll(circuits)
@@ -39,19 +39,21 @@ class CircuitDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `upsertAll updates existing circuits`() {
-        val circuits = listOf(
-            Circuit(id = 1, ref = "monza", name = "Monza", locality = "Monza", country = "Italy"),
+        dao.upsertAll(
+            listOf(
+                Circuit(ref = "monza", name = "Monza", locality = "Monza", country = "Italy"),
+            ),
         )
-        dao.upsertAll(circuits)
 
-        val updated = listOf(
-            Circuit(id = 1, ref = "monza", name = "Autodromo Nazionale Monza", locality = "Monza", country = "Italy"),
+        dao.upsertAll(
+            listOf(
+                Circuit(ref = "monza", name = "Autodromo Nazionale Monza", locality = "Monza", country = "Italy"),
+            ),
         )
-        dao.upsertAll(updated)
 
         dao.count() shouldBe 1
 
-        val found = dao.findById(1)
+        val found = dao.findByRef("monza")
 
         found.shouldNotBeNull()
         found.name shouldBe "Autodromo Nazionale Monza"

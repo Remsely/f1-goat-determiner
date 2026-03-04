@@ -5,6 +5,9 @@ java = "21"
 kotlin = "2.3.10"
 spring-boot = "4.0.2"
 
+# Logging
+kotlin-logging = "8.0.01"
+
 # Resilience
 resilience4j = "2.3.0"
 
@@ -30,9 +33,15 @@ spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-st
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
+spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+
+# Spring
+spring-context = { module = "org.springframework:spring-context" }
+spring-tx = { module = "org.springframework:spring-tx" }
 
 # Kotlin
 jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 detektV2-formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detektV2" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }

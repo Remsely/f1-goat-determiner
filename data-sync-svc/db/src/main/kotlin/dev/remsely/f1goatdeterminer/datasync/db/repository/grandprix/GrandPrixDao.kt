@@ -17,6 +17,12 @@ class GrandPrixDao(
     override fun findBySeasonAndRound(season: Int, round: Int): GrandPrix? =
         jpaRepository.findBySeasonAndRound(season, round)?.toDomain()
 
+    override fun findIdBySeasonAndRound(season: Int, round: Int): Int? =
+        jpaRepository.findBySeasonAndRound(season, round)?.id
+
+    override fun findAllSeasonRoundToId(): Map<Pair<Int, Int>, Int> =
+        jpaRepository.findAll().associate { (it.season to it.round) to it.id!! }
+
     override fun findMaxRoundBySeason(season: Int): Int? = jpaRepository.findMaxRoundBySeason(season)
 
     override fun findAllSeasons(): List<Int> = jpaRepository.findAllSeasons()

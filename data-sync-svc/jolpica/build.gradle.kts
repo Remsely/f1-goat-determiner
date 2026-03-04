@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.domain)
+    implementation(projects.useCase)
 
     api(libs.spring.boot.starter.web)
 

@@ -2,6 +2,8 @@ package dev.remsely.f1goatdeterminer.datasync.db.entity.standings.constructor
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.math.BigDecimal
@@ -10,7 +12,8 @@ import java.math.BigDecimal
 @Table(name = "constructor_standings")
 class ConstructorStandingEntity(
     @Id
-    val id: Int,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
 
     @Column(nullable = false)
     val raceId: Int,

@@ -19,9 +19,9 @@ class DriverMappingExtensionsTest {
             nationality = "British",
         )
 
-        val result = dto.toDomain(id = 10)
+        val result = dto.toDomain()
 
-        result.id shouldBe 10
+        result.id.shouldBeNull()
         result.ref shouldBe "hamilton"
         result.number shouldBe 44
         result.code shouldBe "HAM"
@@ -39,7 +39,7 @@ class DriverMappingExtensionsTest {
             familyName = "Abate",
         )
 
-        val result = dto.toDomain(id = 1)
+        val result = dto.toDomain()
 
         result.number.shouldBeNull()
         result.code.shouldBeNull()

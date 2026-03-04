@@ -14,6 +14,11 @@ class StatusDao(
 
     override fun findById(id: Int): Status? = jpaRepository.findById(id).orElse(null)?.toDomain()
 
+    override fun findByStatus(status: String): Status? = jpaRepository.findByStatus(status)?.toDomain()
+
+    override fun findAllStatusToId(): Map<String, Int> =
+        jpaRepository.findAll().associate { it.status to it.id }
+
     override fun findAll(): List<Status> = jpaRepository.findAll().map { it.toDomain() }
 
     override fun count(): Long = jpaRepository.count()

@@ -10,7 +10,7 @@ import java.math.BigDecimal
 
 class StandingsMappingExtensionsTest {
     @Test
-    fun `DriverStandingDto toDomain maps all fields correctly`() {
+    fun `DriverStandingDto toFetchedDriverStanding maps all fields correctly`() {
         val dto = DriverStandingDto(
             position = "1",
             positionText = "1",
@@ -19,11 +19,11 @@ class StandingsMappingExtensionsTest {
             driver = DriverDto(driverId = "max_verstappen", givenName = "Max", familyName = "Verstappen"),
         )
 
-        val result = dto.toDomain(id = 1, grandPrixId = 100, driverId = 10)
+        val result = dto.toFetchedDriverStanding(season = 2024, round = 1)
 
-        result.id shouldBe 1
-        result.grandPrixId shouldBe 100
-        result.driverId shouldBe 10
+        result.season shouldBe 2024
+        result.round shouldBe 1
+        result.driverRef shouldBe "max_verstappen"
         result.points shouldBe BigDecimal("26")
         result.position shouldBe 1
         result.positionText shouldBe "1"
@@ -31,7 +31,7 @@ class StandingsMappingExtensionsTest {
     }
 
     @Test
-    fun `ConstructorStandingDto toDomain maps all fields correctly`() {
+    fun `ConstructorStandingDto toFetchedConstructorStanding maps all fields correctly`() {
         val dto = ConstructorStandingDto(
             position = "2",
             positionText = "2",
@@ -40,11 +40,11 @@ class StandingsMappingExtensionsTest {
             constructor = ConstructorDto(constructorId = "ferrari", name = "Ferrari"),
         )
 
-        val result = dto.toDomain(id = 2, grandPrixId = 100, constructorId = 20)
+        val result = dto.toFetchedConstructorStanding(season = 2024, round = 1)
 
-        result.id shouldBe 2
-        result.grandPrixId shouldBe 100
-        result.constructorId shouldBe 20
+        result.season shouldBe 2024
+        result.round shouldBe 1
+        result.constructorRef shouldBe "ferrari"
         result.points shouldBe BigDecimal("44.5")
         result.position shouldBe 2
         result.positionText shouldBe "2"
