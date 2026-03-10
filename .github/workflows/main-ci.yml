@@ -51,6 +51,7 @@ jobs:
               - 'data-sync-svc/db/**'
               - 'data-sync-svc/domain/**'
               - 'data-sync-svc/gradle/**'
+              - 'data-sync-svc/jolpica/**'
               - 'data-sync-svc/scheduled/**'
               - 'data-sync-svc/use-case/**'
               - 'data-sync-svc/build.gradle.kts'
@@ -58,7 +59,7 @@ jobs:
               - 'data-sync-svc/gradlew'
               - 'data-sync-svc/gradlew.bat'
               - 'data-sync-svc/Dockerfile'
-              - '.github/workflows/lint-kotlin.yml'
+              - '.github/workflows/verify-kotlin.yml'
               - '.github/workflows/main-ci.yml'
             nginx:
               - 'nginx/**'
@@ -140,17 +141,17 @@ jobs:
           cache-to: type=gha,mode=max
 
   # === DATA SYNC SVC ===
-  data-sync-lint:
-    name: Data Sync - Lint
+  data-sync-verify:
+    name: Data Sync - Verify
     needs: detect-changes
     if: needs.detect-changes.outputs.data-sync-svc == 'true'
-    uses: ./.github/workflows/lint-kotlin.yml
+    uses: ./.github/workflows/verify-kotlin.yml
     with:
       working-directory: './data-sync-svc'
 
   data-sync-build:
     name: Data Sync - Build & Push
-    needs: data-sync-lint
+    needs: data-sync-verify
     if: false
     runs-on: ubuntu-latest
     steps:
