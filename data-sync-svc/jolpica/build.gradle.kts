@@ -10,6 +10,7 @@ dependencies {
     api(libs.spring.boot.starter.web)
 
     implementation(libs.jackson.module.kotlin)
+    implementation(libs.kotlin.logging)
     implementation(libs.resilience4j.ratelimiter)
     implementation(libs.resilience4j.retry)
 

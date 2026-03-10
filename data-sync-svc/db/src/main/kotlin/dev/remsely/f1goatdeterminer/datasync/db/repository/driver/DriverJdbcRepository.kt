@@ -2,6 +2,7 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.driver
 
 import dev.remsely.f1goatdeterminer.datasync.domain.driver.Driver
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
 import java.sql.Date
 import java.sql.Types
@@ -23,7 +24,9 @@ class DriverJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 nationality = EXCLUDED.nationality
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, drivers, drivers.size) { ps, d ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM drivers")!!
+
+        jdbcTemplate.batchUpdate(sql, drivers, drivers.size) { ps, d ->
             val number = d.number
             val dob = d.dateOfBirth
 
@@ -38,6 +41,9 @@ class DriverJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
             if (dob != null) ps.setDate(6, Date.valueOf(dob)) else ps.setNull(6, Types.DATE)
 
             ps.setString(7, d.nationality)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM drivers")!!
+        return (countAfter - countBefore).toInt()
     }
 }

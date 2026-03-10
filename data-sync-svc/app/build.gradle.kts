@@ -15,4 +15,7 @@ dependencies {
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.bundles.testcontainers)
+    testImplementation(libs.wiremock.standalone)
+    testImplementation(libs.awaitility)
+    testImplementation(libs.mockk)
 }

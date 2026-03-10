@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.jolpica.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class CircuitTable(
-    @param:JsonProperty("Circuits")
+    @JsonProperty("Circuits")
     val circuits: List<CircuitDto> = emptyList(),
 )
 
@@ -14,7 +14,7 @@ data class CircuitDto(
 
     val circuitName: String,
 
-    @param:JsonProperty("Location")
+    @JsonProperty("Location")
     val location: LocationDto? = null,
 )
 

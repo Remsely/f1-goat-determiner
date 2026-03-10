@@ -30,6 +30,21 @@ data class SyncCheckpoint(
     companion object {
         const val MAX_RETRIES = 3
 
+        fun initFromPrevious(jobId: Long, previous: SyncCheckpoint) = SyncCheckpoint(
+            id = null,
+            jobId = jobId,
+            entityType = previous.entityType,
+            status = SyncStatus.PENDING,
+            lastOffset = previous.lastOffset,
+            lastSeason = previous.lastSeason,
+            lastRound = previous.lastRound,
+            recordsSynced = 0,
+            startedAt = null,
+            completedAt = null,
+            errorMessage = null,
+            retryCount = 0,
+        )
+
         fun initPending(jobId: Long, entityType: SyncEntityType) = SyncCheckpoint(
             id = null,
             jobId = jobId,

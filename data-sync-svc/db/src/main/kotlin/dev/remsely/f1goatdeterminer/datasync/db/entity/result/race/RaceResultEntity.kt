@@ -10,7 +10,6 @@ import java.math.BigDecimal
 
 @Entity
 @Table(name = "results")
-@Suppress("LongParameterList")
 class RaceResultEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

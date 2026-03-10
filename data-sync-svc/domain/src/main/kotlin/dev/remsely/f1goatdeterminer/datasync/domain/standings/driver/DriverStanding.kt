@@ -7,7 +7,7 @@ data class DriverStanding(
     val grandPrixId: Int,
     val driverId: Int,
     val points: BigDecimal,
-    val position: Int,
+    val position: Int?,
     val positionText: String,
     val wins: Int,
 )

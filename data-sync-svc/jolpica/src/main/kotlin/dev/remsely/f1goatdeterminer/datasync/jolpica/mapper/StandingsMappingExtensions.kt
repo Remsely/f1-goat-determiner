@@ -12,7 +12,7 @@ fun DriverStandingDto.toFetchedDriverStanding(season: Int, round: Int): FetchedD
         round = round,
         driverRef = driver.driverId,
         points = BigDecimal(points),
-        position = position.toInt(),
+        position = position?.toInt(),
         positionText = positionText,
         wins = wins.toInt(),
     )
@@ -23,7 +23,7 @@ fun ConstructorStandingDto.toFetchedConstructorStanding(season: Int, round: Int)
         round = round,
         constructorRef = constructor.constructorId,
         points = BigDecimal(points),
-        position = position.toInt(),
+        position = position?.toInt(),
         positionText = positionText,
         wins = wins.toInt(),
     )

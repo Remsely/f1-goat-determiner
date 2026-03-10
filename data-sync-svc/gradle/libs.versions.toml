@@ -19,6 +19,8 @@ detekt = "1.23.8"
 kotest = "6.1.4"
 mockk = "1.14.9"
 wiremock = "3.13.2"
+shedlock = "7.6.0"
+awaitility = "4.3.0"
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -33,10 +35,11 @@ spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-st
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
-spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
 
 # Spring
 spring-context = { module = "org.springframework:spring-context" }
+spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+spring-boot-core = { module = "org.springframework.boot:spring-boot" }
 spring-tx = { module = "org.springframework:spring-tx" }
 
 # Kotlin
@@ -44,7 +47,7 @@ jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 detektV2-formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detektV2" }
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
+jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" }
 
 # Resilience
 resilience4j-ratelimiter = { module = "io.github.resilience4j:resilience4j-ratelimiter", version.ref = "resilience4j" }
@@ -63,6 +66,9 @@ kotest-assertions-core = { module = "io.kotest:kotest-assertions-core" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
+shedlock-spring = { module = "net.javacrumbs.shedlock:shedlock-spring", version.ref = "shedlock" }
+shedlock-provider-jdbc-template = { module = "net.javacrumbs.shedlock:shedlock-provider-jdbc-template", version.ref = "shedlock" }
+awaitility = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
 
 #-----------------------------------------------------------------------------------------------------------------------
 

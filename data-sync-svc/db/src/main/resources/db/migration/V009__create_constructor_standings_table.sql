@@ -4,7 +4,7 @@ CREATE TABLE constructor_standings
     race_id        INTEGER       NOT NULL,
     constructor_id INTEGER       NOT NULL,
     points         DECIMAL(6, 2) NOT NULL,
-    position       INTEGER       NOT NULL,
+    position       INTEGER,
     position_text  VARCHAR(3)    NOT NULL,
     wins           INTEGER       NOT NULL,
 

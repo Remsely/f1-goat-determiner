@@ -2,6 +2,7 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.constructor
 
 import dev.remsely.f1goatdeterminer.datasync.domain.constructor.Constructor
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
 
 @Component
@@ -17,10 +18,15 @@ class ConstructorJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 nationality = EXCLUDED.nationality
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, constructors, constructors.size) { ps, c ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM constructors")!!
+
+        jdbcTemplate.batchUpdate(sql, constructors, constructors.size) { ps, c ->
             ps.setString(1, c.ref)
             ps.setString(2, c.name)
             ps.setString(3, c.nationality)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM constructors")!!
+        return (countAfter - countBefore).toInt()
     }
 }

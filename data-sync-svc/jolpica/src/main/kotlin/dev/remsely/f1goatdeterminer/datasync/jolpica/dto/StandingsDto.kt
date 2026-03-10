@@ -4,36 +4,50 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class StandingsTable(
     val season: String? = null,
+
     val round: String? = null,
-    @param:JsonProperty("StandingsLists")
+
+    @JsonProperty("StandingsLists")
     val standingsLists: List<StandingsListDto> = emptyList(),
 )
 
 data class StandingsListDto(
     val season: String,
+
     val round: String,
-    @param:JsonProperty("DriverStandings")
+
+    @JsonProperty("DriverStandings")
     val driverStandings: List<DriverStandingDto>? = null,
-    @param:JsonProperty("ConstructorStandings")
+
+    @JsonProperty("ConstructorStandings")
     val constructorStandings: List<ConstructorStandingDto>? = null,
 )
 
 data class DriverStandingDto(
-    val position: String,
+    val position: String? = null,
+
     val positionText: String,
+
     val points: String,
+
     val wins: String,
-    @param:JsonProperty("Driver")
+
+    @JsonProperty("Driver")
     val driver: DriverDto,
-    @param:JsonProperty("Constructors")
+
+    @JsonProperty("Constructors")
     val constructors: List<ConstructorDto> = emptyList(),
 )
 
 data class ConstructorStandingDto(
-    val position: String,
+    val position: String? = null,
+
     val positionText: String,
+
     val points: String,
+
     val wins: String,
-    @param:JsonProperty("Constructor")
+
+    @JsonProperty("Constructor")
     val constructor: ConstructorDto,
 )

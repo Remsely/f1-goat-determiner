@@ -8,13 +8,14 @@ import dev.remsely.f1goatdeterminer.datasync.domain.result.race.RaceResultPersis
 import dev.remsely.f1goatdeterminer.datasync.domain.result.status.StatusFinder
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.SyncEntityType
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpoint
+import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpointPersister
 import dev.remsely.f1goatdeterminer.datasync.usecase.port.F1RaceResultFetcher
 import dev.remsely.f1goatdeterminer.datasync.usecase.port.FetchedRaceResult
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.EntitySyncer
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.SyncResult
+import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.TransactionalPersistenceHelper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 private val log = KotlinLogging.logger {}
 
@@ -26,83 +27,77 @@ class RaceResultSyncer(
     private val driverFinder: DriverFinder,
     private val constructorFinder: ConstructorFinder,
     private val statusFinder: StatusFinder,
+    private val checkpointPersister: SyncCheckpointPersister,
+    private val txHelper: TransactionalPersistenceHelper,
 ) : EntitySyncer {
 
     override val entityType: SyncEntityType = SyncEntityType.RACE_RESULTS
 
-    @Transactional
     override fun sync(checkpoint: SyncCheckpoint): SyncResult {
-        val seasons = grandPrixFinder.findAllSeasons().sorted()
-        val startSeason = checkpoint.lastSeason ?: seasons.firstOrNull() ?: return emptyResult(checkpoint)
-        val startRound = if (checkpoint.lastSeason != null) (checkpoint.lastRound ?: 0) + 1 else 1
-
         val gpIdLookup = grandPrixFinder.findAllSeasonRoundToId()
         val driverIdLookup = driverFinder.findAllRefToId()
         val constructorIdLookup = constructorFinder.findAllRefToId()
         val statusIdLookup = statusFinder.findAllStatusToId()
+        val checkpointId = requireNotNull(checkpoint.id) { "Checkpoint must be persisted" }
 
         var totalSynced = checkpoint.recordsSynced
-        var apiCalls = 0
-        var lastSeason = startSeason
+        var lastSeason: Int? = null
         var lastRound = 0
+        var lastOffset = checkpoint.lastOffset
 
-        for (season in seasons.filter { it >= startSeason }) {
-            val maxRound = grandPrixFinder.findMaxRoundBySeason(season) ?: continue
-            val fromRound = if (season == startSeason) startRound else 1
+        val summary = raceResultFetcher.forEachPageOfResults(checkpoint.lastOffset) { page ->
+            val domainResults = page.items.map { fetched ->
+                fetched.toDomain(gpIdLookup, driverIdLookup, constructorIdLookup, statusIdLookup)
+            }
 
-            for (round in fromRound..maxRound) {
-                totalSynced += syncRound(
-                    season, round, gpIdLookup, driverIdLookup, constructorIdLookup, statusIdLookup,
-                )
-                apiCalls++
-                lastSeason = season
-                lastRound = round
+            val pageSynced = if (domainResults.isNotEmpty()) {
+                txHelper.executeInTransaction { raceResultPersister.upsertAll(domainResults) }
+            } else {
+                0
+            }
+
+            totalSynced += pageSynced
+            lastOffset = page.nextOffset
+
+            if (page.items.isNotEmpty()) {
+                lastSeason = page.items.maxOf { it.season }
+                lastRound = page.items.filter { it.season == lastSeason }.maxOf { it.round }
+            }
+
+            checkpointPersister.updateProgress(
+                id = checkpointId,
+                lastOffset = page.nextOffset,
+                lastSeason = lastSeason,
+                lastRound = lastRound,
+                recordsSynced = totalSynced,
+            )
+
+            log.info {
+                "   RACE_RESULTS -- [${page.pageNumber}/${page.totalPages}] " +
+                    "$pageSynced saved, $totalSynced total"
             }
         }
 
-        log.info { "Synced race results through season=$lastSeason, round=$lastRound" }
-
         return SyncResult(
             recordsSynced = totalSynced,
-            lastOffset = 0,
+            lastOffset = lastOffset,
             lastSeason = lastSeason,
             lastRound = lastRound,
-            apiCallsMade = apiCalls,
+            apiCallsMade = summary.apiCalls,
         )
     }
 
-    private fun syncRound(
-        season: Int,
-        round: Int,
+    private fun FetchedRaceResult.toDomain(
         gpIdLookup: Map<Pair<Int, Int>, Int>,
         driverIdLookup: Map<String, Int>,
         constructorIdLookup: Map<String, Int>,
         statusIdLookup: Map<String, Int>,
-    ): Int {
-        log.debug { "Fetching race results for season=$season, round=$round" }
-        val fetched = raceResultFetcher.fetchResults(season, round)
-
-        val gpId = gpIdLookup[season to round]
-            ?: error("GrandPrix not found for season=$season, round=$round")
-
-        val domainResults = fetched.map { it.toDomain(gpId, driverIdLookup, constructorIdLookup, statusIdLookup) }
-
-        return if (domainResults.isNotEmpty()) {
-            raceResultPersister.upsertAll(domainResults)
-        } else {
-            0
-        }
-    }
-
-    private fun FetchedRaceResult.toDomain(
-        gpId: Int,
-        driverIdLookup: Map<String, Int>,
-        constructorIdLookup: Map<String, Int>,
-        statusIdLookup: Map<String, Int>,
     ) = RaceResult(
-        grandPrixId = gpId,
+        grandPrixId = gpIdLookup[season to round]
+            ?: error("GrandPrix not found for season=$season, round=$round"),
         driverId = driverIdLookup[driverRef] ?: error("Driver not found: $driverRef"),
-        constructorId = constructorIdLookup[constructorRef] ?: error("Constructor not found: $constructorRef"),
+        constructorId = constructorIdLookup[constructorRef]
+            ?: error("Constructor not found: $constructorRef"),
         statusId = statusIdLookup[statusText] ?: error("Status not found: $statusText"),
         number = number,
         grid = grid,
@@ -117,13 +112,5 @@ class RaceResultSyncer(
         fastestLapRank = fastestLapRank,
         fastestLapTime = fastestLapTime,
         fastestLapSpeed = fastestLapSpeed,
-    )
-
-    private fun emptyResult(checkpoint: SyncCheckpoint) = SyncResult(
-        recordsSynced = checkpoint.recordsSynced,
-        lastOffset = 0,
-        lastSeason = null,
-        lastRound = null,
-        apiCallsMade = 0,
     )
 }

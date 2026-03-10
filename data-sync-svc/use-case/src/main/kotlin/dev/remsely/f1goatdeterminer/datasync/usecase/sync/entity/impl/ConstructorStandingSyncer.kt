@@ -5,8 +5,12 @@ import dev.remsely.f1goatdeterminer.datasync.domain.grandprix.GrandPrixFinder
 import dev.remsely.f1goatdeterminer.datasync.domain.standings.constructor.ConstructorStanding
 import dev.remsely.f1goatdeterminer.datasync.domain.standings.constructor.ConstructorStandingPersister
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.SyncEntityType
+import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpointPersister
 import dev.remsely.f1goatdeterminer.datasync.usecase.port.F1ConstructorStandingFetcher
 import dev.remsely.f1goatdeterminer.datasync.usecase.port.FetchedConstructorStanding
+import dev.remsely.f1goatdeterminer.datasync.usecase.port.PageFetchResult
+import dev.remsely.f1goatdeterminer.datasync.usecase.port.PaginationSummary
+import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.TransactionalPersistenceHelper
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
@@ -17,14 +21,28 @@ class ConstructorStandingSyncer(
     private val constructorStandingPersister: ConstructorStandingPersister,
     private val constructorFinder: ConstructorFinder,
     grandPrixFinder: GrandPrixFinder,
-) : AbstractStandingSyncer<ConstructorStanding, FetchedConstructorStanding>(grandPrixFinder) {
+    checkpointPersister: SyncCheckpointPersister,
+    txHelper: TransactionalPersistenceHelper,
+) : AbstractStandingSyncer<ConstructorStanding, FetchedConstructorStanding>(
+    grandPrixFinder,
+    checkpointPersister,
+    txHelper,
+) {
 
     override val log: KLogger = KotlinLogging.logger {}
     override val entityType: SyncEntityType = SyncEntityType.CONSTRUCTOR_STANDINGS
     override val entityName: String = "constructor standings"
 
-    override fun fetchStandings(season: Int, round: Int): List<FetchedConstructorStanding> =
-        constructorStandingFetcher.fetchConstructorStandings(season, round)
+    override fun forEachPageOfSeasonStandings(
+        season: Int,
+        startOffset: Int,
+        onPage: (PageFetchResult<FetchedConstructorStanding>) -> Unit,
+    ): PaginationSummary =
+        constructorStandingFetcher.forEachPageOfSeasonConstructorStandings(season, startOffset, onPage)
+
+    override fun getSeason(fetched: FetchedConstructorStanding): Int = fetched.season
+
+    override fun getRound(fetched: FetchedConstructorStanding): Int = fetched.round
 
     override fun buildParticipantIdLookup(): Map<String, Int> =
         constructorFinder.findAllRefToId()

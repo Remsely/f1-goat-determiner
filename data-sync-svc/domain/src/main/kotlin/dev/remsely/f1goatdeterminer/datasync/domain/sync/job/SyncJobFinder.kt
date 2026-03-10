@@ -9,4 +9,7 @@ interface SyncJobFinder {
     fun findByStatusIn(statuses: List<SyncStatus>): List<SyncJob>
     fun findActiveByType(type: SyncJob.Type): SyncJob?
     fun findResumable(type: SyncJob.Type): SyncJob?
+    fun hasActiveJobs(): Boolean
+    fun hasCompletedFullSync(): Boolean
+    fun findLatestCompleted(): SyncJob?
 }

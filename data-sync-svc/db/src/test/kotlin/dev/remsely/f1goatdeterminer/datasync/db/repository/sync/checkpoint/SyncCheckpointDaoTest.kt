@@ -14,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import java.time.LocalDateTime
 
 @Import(SyncCheckpointDao::class, SyncJobDao::class)
@@ -30,6 +32,9 @@ class SyncCheckpointDaoTest : BaseRepositoryTest() {
 
     @Autowired
     lateinit var jobJpaRepository: dev.remsely.f1goatdeterminer.datasync.db.repository.sync.job.SyncJobJpaRepository
+
+    @Autowired
+    lateinit var jdbcTemplate: JdbcTemplate
 
     private val now: LocalDateTime = LocalDateTime.of(2024, 6, 1, 12, 0)
     private var jobId: Long = 0
@@ -129,6 +134,32 @@ class SyncCheckpointDaoTest : BaseRepositoryTest() {
     }
 
     @Test
+    fun `findPendingByJobId returns only pending checkpoints for requested job`() {
+        val otherJob = jobDao.save(
+            SyncJob(
+                id = null,
+                type = SyncJob.Type.INCREMENTAL,
+                status = SyncStatus.COMPLETED,
+                startedAt = now.plusHours(1),
+                updatedAt = now.plusHours(1),
+                completedAt = now.plusHours(2),
+                errorMessage = null,
+                totalRequests = 0,
+                failedRequests = 0,
+            ),
+        )
+        dao.save(createCheckpoint(entityType = SyncEntityType.CIRCUITS, status = SyncStatus.PENDING))
+        dao.save(createCheckpoint(entityType = SyncEntityType.DRIVERS, status = SyncStatus.COMPLETED))
+        dao.save(SyncCheckpoint.initPending(otherJob.id!!, SyncEntityType.STATUSES))
+
+        val pending = dao.findPendingByJobId(jobId)
+
+        pending shouldHaveSize 1
+        pending.single().jobId shouldBe jobId
+        pending.single().entityType shouldBe SyncEntityType.CIRCUITS
+    }
+
+    @Test
     fun `updateStatus changes checkpoint status`() {
         val saved = dao.save(createCheckpoint())
 
@@ -169,6 +200,37 @@ class SyncCheckpointDaoTest : BaseRepositoryTest() {
     }
 
     @Test
+    fun `updateProgress keeps existing cursor values when nulls are provided`() {
+        val saved = dao.save(createCheckpoint())
+        dao.updateProgress(saved.id!!, lastOffset = 100, lastSeason = 2024, lastRound = 5, recordsSynced = 7)
+
+        dao.updateProgress(saved.id!!, lastOffset = null, lastSeason = null, lastRound = null, recordsSynced = 9)
+
+        val found = dao.findById(saved.id!!).shouldNotBeNull()
+        found.lastOffset shouldBe 100
+        found.lastSeason shouldBe 2024
+        found.lastRound shouldBe 5
+        found.recordsSynced shouldBe 9
+    }
+
+    @Test
+    fun `updateProgress touches parent job updated_at`() {
+        val saved = dao.save(createCheckpoint())
+        val staleTime = now.minusHours(2)
+        jdbcTemplate.update("UPDATE sync_jobs SET updated_at = ? WHERE id = ?", staleTime, jobId)
+
+        dao.updateProgress(saved.id!!, lastOffset = 10, lastSeason = 2024, lastRound = 1, recordsSynced = 5)
+
+        val updatedAt = jdbcTemplate.queryForObject<LocalDateTime>(
+            "SELECT updated_at FROM sync_jobs WHERE id = ?",
+            jobId,
+        )
+
+        updatedAt.shouldNotBeNull()
+        updatedAt.isAfter(staleTime) shouldBe true
+    }
+
+    @Test
     fun `incrementRetryCount increments counter`() {
         val saved = dao.save(createCheckpoint())
 
@@ -182,17 +244,63 @@ class SyncCheckpointDaoTest : BaseRepositoryTest() {
     }
 
     @Test
-    fun `complete marks checkpoint as completed`() {
+    fun `resetRetryCount resets checkpoint retry counter to zero`() {
+        val saved = dao.save(createCheckpoint())
+        dao.incrementRetryCount(saved.id!!)
+        dao.incrementRetryCount(saved.id!!)
+
+        dao.resetRetryCount(saved.id!!)
+
+        val found = dao.findById(saved.id!!).shouldNotBeNull()
+        found.retryCount shouldBe 0
+    }
+
+    @Test
+    fun `completeWithProgress marks checkpoint as completed with progress`() {
         val saved = dao.save(createCheckpoint())
         val completedAt = now.plusHours(1)
 
-        dao.complete(saved.id!!, recordsSynced = 1000, completedAt = completedAt)
+        dao.completeWithProgress(
+            id = saved.id!!,
+            lastOffset = 500,
+            lastSeason = 2025,
+            lastRound = 10,
+            recordsSynced = 1000,
+            completedAt = completedAt,
+        )
 
         val found = dao.findById(saved.id!!)
 
         found.shouldNotBeNull()
         found.status shouldBe SyncStatus.COMPLETED
         found.recordsSynced shouldBe 1000
+        found.lastOffset shouldBe 500
+        found.lastSeason shouldBe 2025
+        found.lastRound shouldBe 10
+        found.completedAt shouldBe completedAt
+    }
+
+    @Test
+    fun `completeWithProgress preserves existing cursor values when nulls are provided`() {
+        val saved = dao.save(createCheckpoint())
+        dao.updateProgress(saved.id!!, lastOffset = 55, lastSeason = 2023, lastRound = 9, recordsSynced = 4)
+        val completedAt = now.plusHours(2)
+
+        dao.completeWithProgress(
+            id = saved.id!!,
+            lastOffset = null,
+            lastSeason = null,
+            lastRound = null,
+            recordsSynced = 10,
+            completedAt = completedAt,
+        )
+
+        val found = dao.findById(saved.id!!).shouldNotBeNull()
+        found.status shouldBe SyncStatus.COMPLETED
+        found.lastOffset shouldBe 55
+        found.lastSeason shouldBe 2023
+        found.lastRound shouldBe 9
+        found.recordsSynced shouldBe 10
         found.completedAt shouldBe completedAt
     }
 

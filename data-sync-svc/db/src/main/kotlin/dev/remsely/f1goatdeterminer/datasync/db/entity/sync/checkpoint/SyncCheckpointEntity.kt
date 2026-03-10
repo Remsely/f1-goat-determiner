@@ -14,7 +14,6 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "sync_checkpoints")
-@Suppress("LongParameterList")
 class SyncCheckpointEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

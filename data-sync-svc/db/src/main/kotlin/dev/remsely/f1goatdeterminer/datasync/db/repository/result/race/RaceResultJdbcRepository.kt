@@ -2,12 +2,12 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.result.race
 
 import dev.remsely.f1goatdeterminer.datasync.domain.result.race.RaceResult
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
 import java.sql.Types
 
 @Component
 class RaceResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
-    @Suppress("LongMethod")
     fun upsertAll(results: List<RaceResult>): Int {
         if (results.isEmpty()) return 0
 
@@ -19,7 +19,7 @@ class RaceResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 fastest_lap_time, fastest_lap_speed, status_id
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (race_id, driver_id) DO UPDATE SET
+            ON CONFLICT (race_id, driver_id, position_order) DO UPDATE SET
                 constructor_id = EXCLUDED.constructor_id,
                 number = EXCLUDED.number,
                 grid = EXCLUDED.grid,
@@ -37,7 +37,9 @@ class RaceResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 status_id = EXCLUDED.status_id
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, results, results.size) { ps, r ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM results")!!
+
+        jdbcTemplate.batchUpdate(sql, results, results.size) { ps, r ->
             val number = r.number
             val position = r.position
             val milliseconds = r.milliseconds
@@ -70,6 +72,9 @@ class RaceResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
             if (fastestLapSpeed != null) ps.setBigDecimal(16, fastestLapSpeed) else ps.setNull(16, Types.DECIMAL)
 
             ps.setInt(17, r.statusId)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM results")!!
+        return (countAfter - countBefore).toInt()
     }
 }

@@ -1,11 +1,11 @@
 package dev.remsely.f1goatdeterminer.datasync.usecase.command
 
-import dev.remsely.f1goatdeterminer.datasync.domain.sync.SyncStatus
-import dev.remsely.f1goatdeterminer.datasync.domain.sync.job.SyncJobFinder
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.job.SyncJobPersister
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.SyncOrchestrator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
 
@@ -15,33 +15,30 @@ private val log = KotlinLogging.logger {}
  *
  * The orchestrator will skip already completed checkpoints and resume
  * from where the job left off.
+ *
+ * @param cooldown minimum time that must elapse since the job's last update before it
+ *   can be claimed. This prevents immediate retries after rate limit exhaustion.
  */
 @Service
 class ResumeSyncCommand(
     private val syncOrchestrator: SyncOrchestrator,
-    private val syncJobFinder: SyncJobFinder,
     private val syncJobPersister: SyncJobPersister,
 ) {
 
-    fun execute(): Boolean {
-        val resumableJobs = syncJobFinder.findByStatusIn(
-            listOf(SyncStatus.FAILED, SyncStatus.PAUSED),
-        )
-
-        val jobToResume = resumableJobs.firstOrNull()
-        if (jobToResume == null) {
-            log.info { "No resumable sync jobs found" }
+    fun execute(cooldown: Duration = Duration.ZERO): Boolean {
+        val updatedBefore = LocalDateTime.now().minus(cooldown)
+        val claimedJob = syncJobPersister.tryClaimResumableJob(updatedBefore)
+        if (claimedJob == null) {
+            log.info { "-- No resumable sync jobs found" }
             return false
         }
 
-        val jobId = requireNotNull(jobToResume.id)
-        log.info { "Resuming sync job id=$jobId, type=${jobToResume.type}, status=${jobToResume.status}" }
+        val jobId = requireNotNull(claimedJob.id)
+        log.info {
+            ">> Resuming ${claimedJob.type} sync job #$jobId (claimed as PENDING)"
+        }
 
-        syncJobPersister.updateStatus(jobId, SyncStatus.PENDING)
-        syncOrchestrator.execute(
-            jobToResume.copy(status = SyncStatus.PENDING),
-        )
-
+        syncOrchestrator.execute(claimedJob)
         return true
     }
 }

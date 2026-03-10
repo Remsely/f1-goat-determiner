@@ -9,7 +9,8 @@ data class JolpicaClientProperties(
     val connectTimeout: Duration,
     val readTimeout: Duration,
     val pageSize: Int,
-    val rateLimit: Int,
+    val rateLimitRps: Double,
     val retryMaxAttempts: Int,
     val retryWaitDuration: Duration,
+    val retryBackoffMultiplier: Double,
 )

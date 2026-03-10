@@ -2,21 +2,28 @@ package dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.impl
 
 import dev.remsely.f1goatdeterminer.datasync.domain.grandprix.GrandPrixFinder
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpoint
+import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpointPersister
+import dev.remsely.f1goatdeterminer.datasync.usecase.port.PageFetchResult
+import dev.remsely.f1goatdeterminer.datasync.usecase.port.PaginationSummary
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.EntitySyncer
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.SyncResult
+import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.TransactionalPersistenceHelper
 import io.github.oshai.kotlinlogging.KLogger
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * Abstract base for standings syncers (driver standings, constructor standings).
  *
- * Subclasses only need to provide entity-specific fetch, mapping, and persist logic.
+ * Standings must be fetched per-season because the Jolpica API does not provide
+ * a global standings endpoint. This syncer iterates over all known seasons from the DB,
+ * fetches standings for each season page by page, and persists them per round.
  *
  * @param D the domain standing type
  * @param F the fetched DTO type
  */
 abstract class AbstractStandingSyncer<D, F>(
     private val grandPrixFinder: GrandPrixFinder,
+    private val checkpointPersister: SyncCheckpointPersister,
+    private val txHelper: TransactionalPersistenceHelper,
 ) : EntitySyncer {
 
     protected abstract val log: KLogger
@@ -24,8 +31,18 @@ abstract class AbstractStandingSyncer<D, F>(
     /** Human-readable entity name for log messages (e.g. "driver standings"). */
     protected abstract val entityName: String
 
-    /** Fetch standings from the external API for a specific season/round. */
-    protected abstract fun fetchStandings(season: Int, round: Int): List<F>
+    /** Fetch standings for a single season page by page, calling [onPage] for each page. */
+    protected abstract fun forEachPageOfSeasonStandings(
+        season: Int,
+        startOffset: Int = 0,
+        onPage: (PageFetchResult<F>) -> Unit,
+    ): PaginationSummary
+
+    /** Extract the season number from a fetched DTO. */
+    protected abstract fun getSeason(fetched: F): Int
+
+    /** Extract the round number from a fetched DTO. */
+    protected abstract fun getRound(fetched: F): Int
 
     /** Build ref→id lookup for the participant (driver or constructor). */
     protected abstract fun buildParticipantIdLookup(): Map<String, Int>
@@ -36,69 +53,73 @@ abstract class AbstractStandingSyncer<D, F>(
     /** Persist a batch of domain objects and return the number of upserted rows. */
     protected abstract fun persistAll(standings: List<D>): Int
 
-    @Transactional
     override fun sync(checkpoint: SyncCheckpoint): SyncResult {
-        val seasons = grandPrixFinder.findAllSeasons().sorted()
-        val startSeason = checkpoint.lastSeason ?: seasons.firstOrNull() ?: return emptyResult(checkpoint)
-        val startRound = if (checkpoint.lastSeason != null) (checkpoint.lastRound ?: 0) + 1 else 1
-
         val gpIdLookup = grandPrixFinder.findAllSeasonRoundToId()
         val participantIdLookup = buildParticipantIdLookup()
+        val checkpointId = requireNotNull(checkpoint.id) { "Checkpoint must be persisted" }
+
+        val seasons = grandPrixFinder.findAllSeasons()
+        val resumeSeason = checkpoint.lastSeason
 
         var totalSynced = checkpoint.recordsSynced
-        var apiCalls = 0
-        var lastSeason = startSeason
-        var lastRound = 0
+        var lastSeason: Int? = resumeSeason
+        var lastRound = checkpoint.lastRound ?: 0
+        var lastOffset = checkpoint.lastOffset
+        var totalApiCalls = 0
 
-        for (season in seasons.filter { it >= startSeason }) {
-            val maxRound = grandPrixFinder.findMaxRoundBySeason(season) ?: continue
-            val fromRound = if (season == startSeason) startRound else 1
+        for (season in seasons) {
+            if (resumeSeason != null && season < resumeSeason) continue
 
-            for (round in fromRound..maxRound) {
-                totalSynced += syncRound(season, round, gpIdLookup, participantIdLookup)
-                apiCalls++
+            val seasonStartOffset = if (season == resumeSeason) checkpoint.lastOffset else 0
+
+            val summary = forEachPageOfSeasonStandings(season, seasonStartOffset) { page ->
+                val bySeason = page.items.groupBy { getSeason(it) }
+
+                for ((s, items) in bySeason.entries.sortedBy { it.key }) {
+                    val byRound = items.groupBy { getRound(it) }
+
+                    for ((round, roundItems) in byRound.entries.sortedBy { it.key }) {
+                        val gpId = gpIdLookup[s to round] ?: continue
+
+                        val domainStandings = roundItems.map { toDomain(it, gpId, participantIdLookup) }
+                        val roundSynced = if (domainStandings.isNotEmpty()) {
+                            txHelper.executeInTransaction { persistAll(domainStandings) }
+                        } else {
+                            0
+                        }
+
+                        totalSynced += roundSynced
+                        lastRound = round
+                    }
+                }
+
                 lastSeason = season
-                lastRound = round
-            }
-        }
+                lastOffset = page.nextOffset
 
-        log.info { "Synced $entityName through season=$lastSeason, round=$lastRound" }
+                checkpointPersister.updateProgress(
+                    id = checkpointId,
+                    lastOffset = page.nextOffset,
+                    lastSeason = season,
+                    lastRound = lastRound,
+                    recordsSynced = totalSynced,
+                )
+
+                log.info {
+                    "   ${entityType.name} season=$season -- " +
+                        "[${page.pageNumber}/${page.totalPages}] " +
+                        "${page.items.size} fetched, $totalSynced total saved"
+                }
+            }
+
+            totalApiCalls += summary.apiCalls
+        }
 
         return SyncResult(
             recordsSynced = totalSynced,
-            lastOffset = 0,
+            lastOffset = lastOffset,
             lastSeason = lastSeason,
             lastRound = lastRound,
-            apiCallsMade = apiCalls,
+            apiCallsMade = totalApiCalls,
         )
     }
-
-    private fun syncRound(
-        season: Int,
-        round: Int,
-        gpIdLookup: Map<Pair<Int, Int>, Int>,
-        participantIdLookup: Map<String, Int>,
-    ): Int {
-        log.debug { "Fetching $entityName for season=$season, round=$round" }
-        val fetched = fetchStandings(season, round)
-
-        val gpId = gpIdLookup[season to round]
-            ?: error("GrandPrix not found for season=$season, round=$round")
-
-        val domainStandings = fetched.map { toDomain(it, gpId, participantIdLookup) }
-
-        return if (domainStandings.isNotEmpty()) {
-            persistAll(domainStandings)
-        } else {
-            0
-        }
-    }
-
-    private fun emptyResult(checkpoint: SyncCheckpoint) = SyncResult(
-        recordsSynced = checkpoint.recordsSynced,
-        lastOffset = 0,
-        lastSeason = null,
-        lastRound = null,
-        apiCallsMade = 0,
-    )
 }

@@ -4,7 +4,10 @@ package dev.remsely.f1goatdeterminer.datasync.usecase.port
  * Port for fetching qualifying results from an external data source.
  */
 interface F1QualifyingFetcher {
-    fun fetchQualifying(season: Int, round: Int): List<FetchedQualifyingResult>
+    fun forEachPageOfQualifying(
+        startOffset: Int = 0,
+        onPage: (PageFetchResult<FetchedQualifyingResult>) -> Unit,
+    ): PaginationSummary
 }
 
 /**

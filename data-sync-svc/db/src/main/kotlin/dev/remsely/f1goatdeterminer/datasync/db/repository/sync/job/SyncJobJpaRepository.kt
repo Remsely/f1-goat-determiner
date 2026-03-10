@@ -7,16 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Repository
 interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
 
-    fun findFirstByOrderByStartedAtDesc(): SyncJobEntity?
+    fun findFirstByOrderByIdDesc(): SyncJobEntity?
 
     fun findByStatus(status: SyncStatus): List<SyncJobEntity>
 
     fun findByStatusIn(statuses: List<SyncStatus>): List<SyncJobEntity>
+
+    fun existsByTypeAndStatus(type: SyncJob.Type, status: SyncStatus): Boolean
+
+    fun findFirstByStatusOrderByIdDesc(status: SyncStatus): SyncJobEntity?
 
     @Query(
         """
@@ -37,6 +42,7 @@ interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
     )
     fun findResumableByType(type: SyncJob.Type): List<SyncJobEntity>
 
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
@@ -52,6 +58,7 @@ interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
         errorMessage: String? = null,
     )
 
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
@@ -67,6 +74,12 @@ interface SyncJobJpaRepository : JpaRepository<SyncJobEntity, Long> {
         updatedAt: LocalDateTime = LocalDateTime.now(),
     )
 
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE SyncJobEntity j SET j.updatedAt = :updatedAt WHERE j.id = :id")
+    fun touchUpdatedAt(id: Long, updatedAt: LocalDateTime = LocalDateTime.now())
+
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """

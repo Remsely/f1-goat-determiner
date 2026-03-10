@@ -2,7 +2,9 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.standings.driver
 
 import dev.remsely.f1goatdeterminer.datasync.domain.standings.driver.DriverStanding
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
+import java.sql.Types
 
 @Component
 class DriverStandingJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
@@ -19,13 +21,20 @@ class DriverStandingJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 wins = EXCLUDED.wins
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, standings, standings.size) { ps, s ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM driver_standings")!!
+
+        jdbcTemplate.batchUpdate(sql, standings, standings.size) { ps, s ->
+            val position = s.position
+
             ps.setInt(1, s.grandPrixId)
             ps.setInt(2, s.driverId)
             ps.setBigDecimal(3, s.points)
-            ps.setInt(4, s.position)
+            if (position != null) ps.setInt(4, position) else ps.setNull(4, Types.INTEGER)
             ps.setString(5, s.positionText)
             ps.setInt(6, s.wins)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM driver_standings")!!
+        return (countAfter - countBefore).toInt()
     }
 }

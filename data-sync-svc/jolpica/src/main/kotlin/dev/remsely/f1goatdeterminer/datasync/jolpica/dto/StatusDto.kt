@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.jolpica.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class StatusTable(
-    @param:JsonProperty("Status")
+    @JsonProperty("Status")
     val statuses: List<StatusDto> = emptyList(),
 )
 

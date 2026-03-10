@@ -21,4 +21,18 @@ class ConstructorMappingExtensionsTest {
         result.name shouldBe "Ferrari"
         result.nationality shouldBe "Italian"
     }
+
+    @Test
+    fun `toDomain handles null nationality`() {
+        val dto = ConstructorDto(
+            constructorId = "unknown_team",
+            name = "Unknown Team",
+            nationality = null,
+        )
+
+        val result = dto.toDomain()
+
+        result.ref shouldBe "unknown_team"
+        result.nationality.shouldBeNull()
+    }
 }

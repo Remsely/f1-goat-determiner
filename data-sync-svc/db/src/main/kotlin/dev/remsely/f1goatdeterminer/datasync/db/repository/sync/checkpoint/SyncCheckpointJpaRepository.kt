@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Repository
@@ -18,6 +19,7 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
 
     fun findByJobIdAndStatus(jobId: Long, status: SyncStatus): List<SyncCheckpointEntity>
 
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
@@ -28,6 +30,7 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
     )
     fun updateStatus(id: Long, status: SyncStatus, errorMessage: String? = null)
 
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
@@ -41,20 +44,40 @@ interface SyncCheckpointJpaRepository : JpaRepository<SyncCheckpointEntity, Long
     )
     fun updateProgress(id: Long, lastOffset: Int?, lastSeason: Int?, lastRound: Int?, recordsSynced: Int)
 
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE SyncCheckpointEntity c SET c.retryCount = c.retryCount + 1 WHERE c.id = :id")
     fun incrementRetryCount(id: Long)
 
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE SyncCheckpointEntity c SET c.retryCount = 0 WHERE c.id = :id")
+    fun resetRetryCount(id: Long)
+
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         UPDATE SyncCheckpointEntity c
-        SET c.status = 'COMPLETED', c.recordsSynced = :recordsSynced, c.completedAt = :completedAt
+        SET c.status = 'COMPLETED',
+            c.lastOffset = COALESCE(:lastOffset, c.lastOffset),
+            c.lastSeason = COALESCE(:lastSeason, c.lastSeason),
+            c.lastRound = COALESCE(:lastRound, c.lastRound),
+            c.recordsSynced = :recordsSynced,
+            c.completedAt = :completedAt
         WHERE c.id = :id
     """,
     )
-    fun complete(id: Long, recordsSynced: Int, completedAt: LocalDateTime = LocalDateTime.now())
+    fun completeWithProgress(
+        id: Long,
+        lastOffset: Int?,
+        lastSeason: Int?,
+        lastRound: Int?,
+        recordsSynced: Int,
+        completedAt: LocalDateTime = LocalDateTime.now(),
+    )
 
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """

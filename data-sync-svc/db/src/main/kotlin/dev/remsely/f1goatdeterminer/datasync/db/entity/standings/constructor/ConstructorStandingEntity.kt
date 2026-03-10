@@ -24,8 +24,8 @@ class ConstructorStandingEntity(
     @Column(nullable = false)
     val points: BigDecimal,
 
-    @Column(nullable = false)
-    val position: Int,
+    @Column
+    val position: Int?,
 
     @Column(nullable = false)
     val positionText: String,

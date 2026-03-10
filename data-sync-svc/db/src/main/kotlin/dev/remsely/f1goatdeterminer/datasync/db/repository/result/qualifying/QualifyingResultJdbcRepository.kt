@@ -2,6 +2,7 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.result.qualifying
 
 import dev.remsely.f1goatdeterminer.datasync.domain.result.qualifying.QualifyingResult
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
 import java.sql.Types
 
@@ -22,7 +23,9 @@ class QualifyingResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 q3 = EXCLUDED.q3
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, results, results.size) { ps, q ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM qualifying")!!
+
+        jdbcTemplate.batchUpdate(sql, results, results.size) { ps, q ->
             val number = q.number
 
             ps.setInt(1, q.grandPrixId)
@@ -35,6 +38,9 @@ class QualifyingResultJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
             ps.setString(6, q.q1)
             ps.setString(7, q.q2)
             ps.setString(8, q.q3)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM qualifying")!!
+        return (countAfter - countBefore).toInt()
     }
 }

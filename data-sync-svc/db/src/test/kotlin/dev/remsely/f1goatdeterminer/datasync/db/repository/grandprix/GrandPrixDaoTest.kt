@@ -1,9 +1,13 @@
 package dev.remsely.f1goatdeterminer.datasync.db.repository.grandprix
 
 import dev.remsely.f1goatdeterminer.datasync.db.BaseRepositoryTest
+import dev.remsely.f1goatdeterminer.datasync.db.fixture.DbTestDataHelper
 import dev.remsely.f1goatdeterminer.datasync.db.repository.circuit.CircuitDao
 import dev.remsely.f1goatdeterminer.datasync.db.repository.circuit.CircuitJdbcRepository
-import dev.remsely.f1goatdeterminer.datasync.domain.circuit.Circuit
+import dev.remsely.f1goatdeterminer.datasync.db.repository.constructor.ConstructorDao
+import dev.remsely.f1goatdeterminer.datasync.db.repository.constructor.ConstructorJdbcRepository
+import dev.remsely.f1goatdeterminer.datasync.db.repository.driver.DriverDao
+import dev.remsely.f1goatdeterminer.datasync.db.repository.driver.DriverJdbcRepository
 import dev.remsely.f1goatdeterminer.datasync.domain.grandprix.GrandPrix
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -21,6 +25,11 @@ import java.time.LocalTime
     GrandPrixJdbcRepository::class,
     CircuitDao::class,
     CircuitJdbcRepository::class,
+    DriverDao::class,
+    DriverJdbcRepository::class,
+    ConstructorDao::class,
+    ConstructorJdbcRepository::class,
+    DbTestDataHelper::class,
 )
 class GrandPrixDaoTest : BaseRepositoryTest() {
 
@@ -28,13 +37,13 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
     lateinit var dao: GrandPrixDao
 
     @Autowired
-    lateinit var circuitDao: CircuitDao
-
-    @Autowired
     lateinit var grandPrixJpaRepository: GrandPrixJpaRepository
 
     @Autowired
     lateinit var circuitJpaRepository: dev.remsely.f1goatdeterminer.datasync.db.repository.circuit.CircuitJpaRepository
+
+    @Autowired
+    lateinit var testData: DbTestDataHelper
 
     @BeforeEach
     fun cleanUp() {
@@ -42,14 +51,9 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
         circuitJpaRepository.deleteAllInBatch()
     }
 
-    private fun insertCircuit(): Int {
-        circuitDao.upsertAll(listOf(Circuit(ref = "monza", name = "Monza", locality = "Monza", country = "Italy")))
-        return circuitDao.findIdByRef("monza")!!
-    }
-
     @Test
     fun `upsertAll inserts grand prix`() {
-        val circuitId = insertCircuit()
+        val circuitId = testData.insertMonzaCircuit()
         val races = listOf(
             GrandPrix(
                 season = 2024,
@@ -74,7 +78,7 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `findBySeasonAndRound returns correct grand prix`() {
-        val circuitId = insertCircuit()
+        val circuitId = testData.insertMonzaCircuit()
         dao.upsertAll(
             listOf(
                 GrandPrix(
@@ -109,7 +113,7 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `findMaxRoundBySeason returns max round`() {
-        val circuitId = insertCircuit()
+        val circuitId = testData.insertMonzaCircuit()
         dao.upsertAll(
             listOf(
                 GrandPrix(
@@ -148,7 +152,7 @@ class GrandPrixDaoTest : BaseRepositoryTest() {
 
     @Test
     fun `findAllSeasons returns distinct sorted seasons`() {
-        val circuitId = insertCircuit()
+        val circuitId = testData.insertMonzaCircuit()
         dao.upsertAll(
             listOf(
                 GrandPrix(

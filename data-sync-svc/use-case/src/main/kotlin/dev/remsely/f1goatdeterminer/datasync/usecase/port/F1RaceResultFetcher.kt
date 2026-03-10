@@ -6,7 +6,10 @@ import java.math.BigDecimal
  * Port for fetching race results from an external data source.
  */
 interface F1RaceResultFetcher {
-    fun fetchResults(season: Int, round: Int): List<FetchedRaceResult>
+    fun forEachPageOfResults(
+        startOffset: Int = 0,
+        onPage: (PageFetchResult<FetchedRaceResult>) -> Unit,
+    ): PaginationSummary
 }
 
 /**

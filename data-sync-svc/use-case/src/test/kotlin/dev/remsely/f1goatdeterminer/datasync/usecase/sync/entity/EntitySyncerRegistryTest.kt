@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test
 
 class EntitySyncerRegistryTest {
 
-    private fun fakeSyncer(type: SyncEntityType) = object : EntitySyncer {
+    private fun fakeSyncer(type: SyncEntityType, recordsSynced: Int = 0) = object : EntitySyncer {
         override val entityType: SyncEntityType = type
         override fun sync(checkpoint: SyncCheckpoint): SyncResult =
-            SyncResult(0, 0, null, null, 0)
+            SyncResult(recordsSynced, recordsSynced, null, null, 0)
     }
 
     @Test
@@ -25,11 +25,22 @@ class EntitySyncerRegistryTest {
     }
 
     @Test
-    fun `getSyncer throws for unregistered entity type`() {
+    fun `getSyncer throws exact error for unregistered entity type`() {
         val registry = EntitySyncerRegistry(emptyList())
 
-        shouldThrow<IllegalStateException> {
+        val error = shouldThrow<IllegalStateException> {
             registry.getSyncer(SyncEntityType.STATUSES)
         }
+
+        error.message shouldBe "No EntitySyncer registered for entity type: STATUSES"
+    }
+
+    @Test
+    fun `registry keeps last syncer when duplicate entity type is registered`() {
+        val first = fakeSyncer(SyncEntityType.STATUSES, recordsSynced = 1)
+        val second = fakeSyncer(SyncEntityType.STATUSES, recordsSynced = 2)
+        val registry = EntitySyncerRegistry(listOf(first, second))
+
+        registry.getSyncer(SyncEntityType.STATUSES) shouldBe second
     }
 }

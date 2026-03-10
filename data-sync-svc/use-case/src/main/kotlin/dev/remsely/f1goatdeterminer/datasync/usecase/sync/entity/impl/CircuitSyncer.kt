@@ -3,12 +3,13 @@ package dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.impl
 import dev.remsely.f1goatdeterminer.datasync.domain.circuit.CircuitPersister
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.SyncEntityType
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpoint
+import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpointPersister
 import dev.remsely.f1goatdeterminer.datasync.usecase.port.F1CircuitFetcher
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.EntitySyncer
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.SyncResult
+import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.TransactionalPersistenceHelper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 private val log = KotlinLogging.logger {}
 
@@ -16,30 +17,44 @@ private val log = KotlinLogging.logger {}
 class CircuitSyncer(
     private val circuitFetcher: F1CircuitFetcher,
     private val circuitPersister: CircuitPersister,
+    private val checkpointPersister: SyncCheckpointPersister,
+    private val txHelper: TransactionalPersistenceHelper,
 ) : EntitySyncer {
 
     override val entityType: SyncEntityType = SyncEntityType.CIRCUITS
 
-    @Transactional
     override fun sync(checkpoint: SyncCheckpoint): SyncResult {
-        log.info { "Syncing circuits from offset=${checkpoint.lastOffset}" }
+        val checkpointId = requireNotNull(checkpoint.id) { "Checkpoint must be persisted" }
+        var totalSynced = checkpoint.recordsSynced
+        var lastOffset = checkpoint.lastOffset
 
-        val circuits = circuitFetcher.fetchAll(startOffset = checkpoint.lastOffset)
+        val summary = circuitFetcher.forEachPageOfCircuits(checkpoint.lastOffset) { page ->
+            val pageSynced = if (page.items.isNotEmpty()) {
+                txHelper.executeInTransaction { circuitPersister.upsertAll(page.items) }
+            } else {
+                0
+            }
+            totalSynced += pageSynced
+            lastOffset = page.nextOffset
 
-        val upserted = if (circuits.isNotEmpty()) {
-            circuitPersister.upsertAll(circuits)
-        } else {
-            0
+            checkpointPersister.updateProgress(
+                id = checkpointId,
+                lastOffset = page.nextOffset,
+                recordsSynced = totalSynced,
+            )
+
+            log.info {
+                "   CIRCUITS -- [${page.pageNumber}/${page.totalPages}] " +
+                    "$pageSynced saved, $totalSynced total"
+            }
         }
 
-        log.info { "Synced $upserted circuits" }
-
         return SyncResult(
-            recordsSynced = checkpoint.recordsSynced + upserted,
-            lastOffset = checkpoint.lastOffset + circuits.size,
+            recordsSynced = totalSynced,
+            lastOffset = lastOffset,
             lastSeason = null,
             lastRound = null,
-            apiCallsMade = 1,
+            apiCallsMade = summary.apiCalls,
         )
     }
 }

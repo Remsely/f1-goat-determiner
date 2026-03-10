@@ -10,5 +10,6 @@ dependencies {
     implementation(libs.spring.context)
     implementation(libs.spring.tx)
 
+    testImplementation(testFixtures(projects.domain))
     testImplementation(libs.spring.boot.starter.test)
 }

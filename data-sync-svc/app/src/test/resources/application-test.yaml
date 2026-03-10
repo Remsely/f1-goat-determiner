@@ -9,11 +9,14 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  main:
+    allow-bean-definition-overriding: true
 
 logging:
   level:
     root: WARN
     org.testcontainers: INFO
+    dev.remsely: DEBUG
 
 integration:
   jolpica:
@@ -21,6 +24,16 @@ integration:
     connect-timeout: 5s
     read-timeout: 5s
     page-size: 100
-    rate-limit: 4
+    rate-limit-rps: 100.0
     retry-max-attempts: 1
     retry-wait-duration: 100ms
+    retry-backoff-multiplier: 1.0
+
+sync:
+  schedule:
+    resume-on-startup: false
+    full-on-first-run: false
+    incremental-cron: "-"
+    incremental-lock-at-most-for: 1m
+    incremental-lock-at-least-for: 0s
+    stale-job-threshold: 1m

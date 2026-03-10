@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.jolpica.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ConstructorTable(
-    @param:JsonProperty("Constructors")
+    @JsonProperty("Constructors")
     val constructors: List<ConstructorDto> = emptyList(),
 )
 

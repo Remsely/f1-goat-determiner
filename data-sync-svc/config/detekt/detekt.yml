@@ -79,3 +79,4 @@ complexity:
     functionThreshold: 8
     constructorThreshold: 10
     ignoreDefaultParameters: true
+    excludes: [ '**/*Entity.kt' ]

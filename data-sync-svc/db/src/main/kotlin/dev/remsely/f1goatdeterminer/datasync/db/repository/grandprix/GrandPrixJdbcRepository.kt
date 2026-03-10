@@ -2,6 +2,7 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.grandprix
 
 import dev.remsely.f1goatdeterminer.datasync.domain.grandprix.GrandPrix
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
 import java.sql.Date
 import java.sql.Time
@@ -22,7 +23,9 @@ class GrandPrixJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 time = EXCLUDED.time
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, grandPrixList, grandPrixList.size) { ps, gp ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM races")!!
+
+        jdbcTemplate.batchUpdate(sql, grandPrixList, grandPrixList.size) { ps, gp ->
             val time = gp.time
 
             ps.setInt(1, gp.season)
@@ -32,6 +35,9 @@ class GrandPrixJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
             ps.setDate(5, Date.valueOf(gp.date))
 
             if (time != null) ps.setTime(6, Time.valueOf(time)) else ps.setNull(6, Types.TIME)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM races")!!
+        return (countAfter - countBefore).toInt()
     }
 }

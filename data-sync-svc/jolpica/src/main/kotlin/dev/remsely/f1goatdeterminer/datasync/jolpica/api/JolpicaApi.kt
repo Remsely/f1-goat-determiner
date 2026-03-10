@@ -32,40 +32,35 @@ interface JolpicaApi {
         @RequestParam("offset") offset: Int,
     ): JolpicaResponse
 
-    @GetExchange("/seasons.json")
-    fun fetchSeasons(
+    @GetExchange("/races.json")
+    fun fetchAllRaces(
         @RequestParam("limit") limit: Int,
         @RequestParam("offset") offset: Int,
     ): JolpicaResponse
 
-    @GetExchange("/{season}.json")
-    fun fetchRaces(
+    @GetExchange("/results.json")
+    fun fetchAllResults(
+        @RequestParam("limit") limit: Int,
+        @RequestParam("offset") offset: Int,
+    ): JolpicaResponse
+
+    @GetExchange("/qualifying.json")
+    fun fetchAllQualifying(
+        @RequestParam("limit") limit: Int,
+        @RequestParam("offset") offset: Int,
+    ): JolpicaResponse
+
+    @GetExchange("/{season}/driverStandings.json")
+    fun fetchSeasonDriverStandings(
         @PathVariable season: Int,
         @RequestParam("limit") limit: Int,
         @RequestParam("offset") offset: Int,
     ): JolpicaResponse
 
-    @GetExchange("/{season}/{round}/results.json")
-    fun fetchResults(
+    @GetExchange("/{season}/constructorStandings.json")
+    fun fetchSeasonConstructorStandings(
         @PathVariable season: Int,
-        @PathVariable round: Int,
-    ): JolpicaResponse
-
-    @GetExchange("/{season}/{round}/qualifying.json")
-    fun fetchQualifying(
-        @PathVariable season: Int,
-        @PathVariable round: Int,
-    ): JolpicaResponse
-
-    @GetExchange("/{season}/{round}/driverStandings.json")
-    fun fetchDriverStandings(
-        @PathVariable season: Int,
-        @PathVariable round: Int,
-    ): JolpicaResponse
-
-    @GetExchange("/{season}/{round}/constructorStandings.json")
-    fun fetchConstructorStandings(
-        @PathVariable season: Int,
-        @PathVariable round: Int,
+        @RequestParam("limit") limit: Int,
+        @RequestParam("offset") offset: Int,
     ): JolpicaResponse
 }

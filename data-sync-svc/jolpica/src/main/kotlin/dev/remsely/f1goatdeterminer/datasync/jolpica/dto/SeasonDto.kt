@@ -3,7 +3,7 @@ package dev.remsely.f1goatdeterminer.datasync.jolpica.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class SeasonTable(
-    @param:JsonProperty("Seasons")
+    @JsonProperty("Seasons")
     val seasons: List<SeasonDto> = emptyList(),
 )
 

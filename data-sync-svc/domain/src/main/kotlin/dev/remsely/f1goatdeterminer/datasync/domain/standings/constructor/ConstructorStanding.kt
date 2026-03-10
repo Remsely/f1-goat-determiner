@@ -7,7 +7,7 @@ data class ConstructorStanding(
     val grandPrixId: Int,
     val constructorId: Int,
     val points: BigDecimal,
-    val position: Int,
+    val position: Int?,
     val positionText: String,
     val wins: Int,
 )

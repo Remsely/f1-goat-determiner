@@ -14,7 +14,7 @@ CREATE TABLE sync_jobs
         CHECK (type IN ('FULL', 'INCREMENTAL')),
 
     CONSTRAINT chk_sync_jobs_status
-        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'PAUSED'))
+        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'PAUSED', 'SKIPPED'))
 );
 
 CREATE INDEX idx_sync_jobs_status ON sync_jobs (status);
@@ -25,3 +25,7 @@ COMMENT ON COLUMN sync_jobs.type IS 'FULL - complete data load, INCREMENTAL - ne
 COMMENT ON COLUMN sync_jobs.status IS 'Current job status';
 COMMENT ON COLUMN sync_jobs.total_requests IS 'Total HTTP requests made';
 COMMENT ON COLUMN sync_jobs.failed_requests IS 'Failed requests count (after all retries)';
+
+-- Only one active (PENDING or IN_PROGRESS) job can exist at a time.
+-- Acts as a safety net alongside advisory locks in the application layer.
+CREATE UNIQUE INDEX uk_sync_jobs_single_active ON sync_jobs ((1)) WHERE status IN ('PENDING', 'IN_PROGRESS');

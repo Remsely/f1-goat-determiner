@@ -3,12 +3,13 @@ package dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.impl
 import dev.remsely.f1goatdeterminer.datasync.domain.driver.DriverPersister
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.SyncEntityType
 import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpoint
+import dev.remsely.f1goatdeterminer.datasync.domain.sync.checkpoint.SyncCheckpointPersister
 import dev.remsely.f1goatdeterminer.datasync.usecase.port.F1DriverFetcher
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.EntitySyncer
 import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.SyncResult
+import dev.remsely.f1goatdeterminer.datasync.usecase.sync.entity.TransactionalPersistenceHelper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 private val log = KotlinLogging.logger {}
 
@@ -16,30 +17,44 @@ private val log = KotlinLogging.logger {}
 class DriverSyncer(
     private val driverFetcher: F1DriverFetcher,
     private val driverPersister: DriverPersister,
+    private val checkpointPersister: SyncCheckpointPersister,
+    private val txHelper: TransactionalPersistenceHelper,
 ) : EntitySyncer {
 
     override val entityType: SyncEntityType = SyncEntityType.DRIVERS
 
-    @Transactional
     override fun sync(checkpoint: SyncCheckpoint): SyncResult {
-        log.info { "Syncing drivers from offset=${checkpoint.lastOffset}" }
+        val checkpointId = requireNotNull(checkpoint.id) { "Checkpoint must be persisted" }
+        var totalSynced = checkpoint.recordsSynced
+        var lastOffset = checkpoint.lastOffset
 
-        val drivers = driverFetcher.fetchAll(startOffset = checkpoint.lastOffset)
+        val summary = driverFetcher.forEachPageOfDrivers(checkpoint.lastOffset) { page ->
+            val pageSynced = if (page.items.isNotEmpty()) {
+                txHelper.executeInTransaction { driverPersister.upsertAll(page.items) }
+            } else {
+                0
+            }
+            totalSynced += pageSynced
+            lastOffset = page.nextOffset
 
-        val upserted = if (drivers.isNotEmpty()) {
-            driverPersister.upsertAll(drivers)
-        } else {
-            0
+            checkpointPersister.updateProgress(
+                id = checkpointId,
+                lastOffset = page.nextOffset,
+                recordsSynced = totalSynced,
+            )
+
+            log.info {
+                "   DRIVERS -- [${page.pageNumber}/${page.totalPages}] " +
+                    "$pageSynced saved, $totalSynced total"
+            }
         }
 
-        log.info { "Synced $upserted drivers" }
-
         return SyncResult(
-            recordsSynced = checkpoint.recordsSynced + upserted,
-            lastOffset = checkpoint.lastOffset + drivers.size,
+            recordsSynced = totalSynced,
+            lastOffset = lastOffset,
             lastSeason = null,
             lastRound = null,
-            apiCallsMade = 1,
+            apiCallsMade = summary.apiCalls,
         )
     }
 }

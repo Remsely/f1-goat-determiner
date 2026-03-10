@@ -4,9 +4,14 @@ import java.math.BigDecimal
 
 /**
  * Port for fetching constructor standings from an external data source.
+ * Standings must be fetched per-season (global endpoint does not exist in Jolpica API).
  */
 interface F1ConstructorStandingFetcher {
-    fun fetchConstructorStandings(season: Int, round: Int): List<FetchedConstructorStanding>
+    fun forEachPageOfSeasonConstructorStandings(
+        season: Int,
+        startOffset: Int = 0,
+        onPage: (PageFetchResult<FetchedConstructorStanding>) -> Unit,
+    ): PaginationSummary
 }
 
 /**
@@ -17,7 +22,7 @@ data class FetchedConstructorStanding(
     val round: Int,
     val constructorRef: String,
     val points: BigDecimal,
-    val position: Int,
+    val position: Int?,
     val positionText: String,
     val wins: Int,
 )

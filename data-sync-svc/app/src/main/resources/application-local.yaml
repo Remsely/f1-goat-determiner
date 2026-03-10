@@ -4,10 +4,14 @@ spring:
       maximum-pool-size: 5
 
   jpa:
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
 
   flyway:
     clean-disabled: false
+
+sync:
+  schedule:
+    incremental-cron: "0 */5 * * * *"

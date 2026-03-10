@@ -1,0 +1,37 @@
+{
+  "env": {
+    "CLAUDE_CODE_TMPDIR": ".claude/tmp"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "WebFetch(domain:api.jolpi.ca)",
+      "Bash(curl:*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets.yml)",
+      "Read(**/secrets.yaml)",
+      "Read(dev-secrets.properties)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Edit(**/secrets.yml)",
+      "Edit(**/secrets.yaml)",
+      "Edit(dev-secrets.properties)"
+    ]
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "jdtls-lsp@claude-plugins-official": true,
+    "kotlin-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true
+  },
+  "language": "russian"
+}

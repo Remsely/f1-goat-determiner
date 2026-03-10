@@ -71,3 +71,8 @@ frontend/.next/
 frontend/build/
 
 .gradle/
+.kotlin/
+
+# Claude Code
+.claude/tmp/
+.claude/settings.local.json

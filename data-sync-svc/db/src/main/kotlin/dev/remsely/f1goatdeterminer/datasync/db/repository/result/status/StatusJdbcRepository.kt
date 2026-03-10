@@ -2,6 +2,7 @@ package dev.remsely.f1goatdeterminer.datasync.db.repository.result.status
 
 import dev.remsely.f1goatdeterminer.datasync.domain.result.status.Status
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.queryForObject
 import org.springframework.stereotype.Component
 
 @Component
@@ -16,9 +17,14 @@ class StatusJdbcRepository(private val jdbcTemplate: JdbcTemplate) {
                 status = EXCLUDED.status
         """.trimIndent()
 
-        return jdbcTemplate.batchUpdate(sql, statuses, statuses.size) { ps, s ->
+        val countBefore = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM statuses")!!
+
+        jdbcTemplate.batchUpdate(sql, statuses, statuses.size) { ps, s ->
             ps.setInt(1, s.id)
             ps.setString(2, s.status)
-        }.sumOf { it.sum() }
+        }
+
+        val countAfter = jdbcTemplate.queryForObject<Long>("SELECT count(*) FROM statuses")!!
+        return (countAfter - countBefore).toInt()
     }
 }

@@ -10,18 +10,17 @@ import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.DriverDto
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.DriverStandingDto
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.JolpicaResponse
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.MRData
-import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.QualifyingResultDto
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.RaceDto
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.RaceTable
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.ResultDto
-import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.SeasonDto
-import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.SeasonTable
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.StandingsListDto
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.StandingsTable
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.StatusDto
 import dev.remsely.f1goatdeterminer.datasync.jolpica.dto.StatusTable
+import dev.remsely.f1goatdeterminer.datasync.usecase.sync.RateLimitExhaustedException
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -29,7 +28,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.springframework.http.HttpStatusCode
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import java.time.Duration
 
@@ -42,14 +42,15 @@ class JolpicaApiClientTest {
         connectTimeout = Duration.ofSeconds(5),
         readTimeout = Duration.ofSeconds(5),
         pageSize = 2,
-        rateLimit = 10,
+        rateLimitRps = 10.0,
         retryMaxAttempts = 1,
         retryWaitDuration = Duration.ofMillis(100),
+        retryBackoffMultiplier = 1.0,
     )
     private val client = JolpicaApiClient(api, retry, properties)
 
     @Test
-    fun `fetchAllStatuses returns all statuses from single page`() {
+    fun `forEachPageOfStatuses returns all statuses from single page`() {
         every { api.fetchStatuses(2, 0) } returns jolpicaResponse(
             total = "2",
             statusTable = StatusTable(
@@ -60,14 +61,15 @@ class JolpicaApiClientTest {
             ),
         )
 
-        val result = client.fetchAllStatuses()
+        val allItems = mutableListOf<StatusDto>()
+        client.forEachPageOfStatuses { items, _, _, _ -> allItems.addAll(items) }
 
-        result shouldHaveSize 2
-        result[0].status shouldBe "Finished"
+        allItems shouldHaveSize 2
+        allItems[0].status shouldBe "Finished"
     }
 
     @Test
-    fun `fetchAllCircuits paginates across multiple pages`() {
+    fun `forEachPageOfCircuits paginates across multiple pages`() {
         every { api.fetchCircuits(2, 0) } returns jolpicaResponse(
             total = "3",
             offset = "0",
@@ -88,17 +90,18 @@ class JolpicaApiClientTest {
             ),
         )
 
-        val result = client.fetchAllCircuits()
+        val allItems = mutableListOf<CircuitDto>()
+        client.forEachPageOfCircuits { items, _, _, _ -> allItems.addAll(items) }
 
-        result shouldHaveSize 3
-        result[2].circuitId shouldBe "silverstone"
+        allItems shouldHaveSize 3
+        allItems[2].circuitId shouldBe "silverstone"
 
         verify(exactly = 1) { api.fetchCircuits(2, 0) }
         verify(exactly = 1) { api.fetchCircuits(2, 2) }
     }
 
     @Test
-    fun `fetchAllStatuses with startOffset resumes from given offset`() {
+    fun `forEachPageOfStatuses with startOffset resumes from given offset`() {
         every { api.fetchStatuses(2, 5) } returns jolpicaResponse(
             total = "7",
             offset = "5",
@@ -110,98 +113,178 @@ class JolpicaApiClientTest {
             ),
         )
 
-        val result = client.fetchAllStatuses(startOffset = 5)
+        val allItems = mutableListOf<StatusDto>()
+        client.forEachPageOfStatuses(startOffset = 5) { items, _, _, _ -> allItems.addAll(items) }
 
-        result shouldHaveSize 2
+        allItems shouldHaveSize 2
         verify(exactly = 1) { api.fetchStatuses(2, 5) }
     }
 
     @Test
-    fun `fetchAllSeasons returns parsed season years`() {
-        every { api.fetchSeasons(2, 0) } returns jolpicaResponse(
-            total = "2",
-            seasonTable = SeasonTable(
+    fun `retry retries on RestClientException and eventually succeeds`() {
+        val retryConfig = RetryConfig.custom<Any>()
+            .maxAttempts(3)
+            .waitDuration(Duration.ofMillis(10))
+            .retryOnException { it is RestClientException }
+            .build()
+        val retryingClient = JolpicaApiClient(api, Retry.of("retry-test", retryConfig), properties)
+
+        every { api.fetchStatuses(2, 0) } throws RestClientException("timeout") andThen
+            jolpicaResponse(
+                total = "1",
+                statusTable = StatusTable(listOf(StatusDto("1", status = "Finished"))),
+            )
+
+        retryingClient.forEachPageOfStatuses { _, _, _, _ -> }
+
+        verify(exactly = 2) { api.fetchStatuses(2, 0) }
+    }
+
+    @Test
+    fun `retry exhausts attempts and throws on persistent failure`() {
+        val retryConfig = RetryConfig.custom<Any>()
+            .maxAttempts(2)
+            .waitDuration(Duration.ofMillis(10))
+            .retryOnException { it is RestClientException }
+            .build()
+        val retryingClient = JolpicaApiClient(api, Retry.of("retry-test", retryConfig), properties)
+
+        every { api.fetchStatuses(2, 0) } throws RestClientException("persistent failure")
+
+        shouldThrow<RestClientException> {
+            retryingClient.forEachPageOfStatuses { _, _, _, _ -> }
+        }
+
+        verify(exactly = 2) { api.fetchStatuses(2, 0) }
+    }
+
+    @Test
+    fun `pagination breaks when API returns 0 records`() {
+        every { api.fetchStatuses(2, 0) } returns jolpicaResponse(
+            total = "5",
+            statusTable = StatusTable(emptyList()),
+        )
+
+        val pages = mutableListOf<List<StatusDto>>()
+        client.forEachPageOfStatuses { items, _, _, _ -> pages.add(items) }
+
+        pages shouldHaveSize 0
+        verify(exactly = 1) { api.fetchStatuses(2, 0) }
+    }
+
+    @Test
+    fun `pagination uses page size for offset increment`() {
+        every { api.fetchStatuses(2, 0) } returns jolpicaResponse(
+            total = "3",
+            offset = "0",
+            statusTable = StatusTable(
                 listOf(
-                    SeasonDto("1950"),
-                    SeasonDto("2024"),
+                    StatusDto("1", status = "Finished"),
+                    StatusDto("2", status = "Disqualified"),
+                ),
+            ),
+        )
+        every { api.fetchStatuses(2, 2) } returns jolpicaResponse(
+            total = "3",
+            offset = "2",
+            statusTable = StatusTable(
+                listOf(
+                    StatusDto("3", status = "+1 Lap"),
                 ),
             ),
         )
 
-        val result = client.fetchAllSeasons()
+        val allItems = mutableListOf<StatusDto>()
+        client.forEachPageOfStatuses { items, _, _, _ -> allItems.addAll(items) }
 
-        result shouldBe listOf(1950, 2024)
+        allItems shouldHaveSize 3
+        verify(exactly = 1) { api.fetchStatuses(2, 0) }
+        verify(exactly = 1) { api.fetchStatuses(2, 2) }
     }
 
     @Test
-    fun `fetchResults returns race results for given season and round`() {
-        val resultDto = ResultDto(
-            number = "1",
-            position = "1",
-            positionText = "1",
-            points = "26",
-            driver = DriverDto(driverId = "max_verstappen", givenName = "Max", familyName = "Verstappen"),
-            constructor = ConstructorDto(constructorId = "red_bull", name = "Red Bull"),
-            grid = "1",
-            laps = "57",
+    fun `forEachPageOfResults paginates by pageSize not by race count`() {
+        val driver1 = DriverDto(driverId = "driver1", givenName = "Test", familyName = "Driver1")
+        val driver2 = DriverDto(driverId = "driver2", givenName = "Test", familyName = "Driver2")
+        val team1 = ConstructorDto(constructorId = "team1", name = "Team 1")
+        val team2 = ConstructorDto(constructorId = "team2", name = "Team 2")
+        val circuit = CircuitDto(circuitId = "monza", circuitName = "Monza")
+
+        fun resultDto(
+            pos: String,
+            pts: String,
+            driver: DriverDto,
+            team: ConstructorDto,
+            laps: String,
+        ) = ResultDto(
+            positionText = pos,
+            points = pts,
+            driver = driver,
+            constructor = team,
+            grid = pos,
+            laps = laps,
             status = "Finished",
         )
-        every { api.fetchResults(2024, 1) } returns jolpicaResponse(
+
+        val result1 = resultDto("1", "25", driver1, team1, "50")
+        val result2 = resultDto("2", "18", driver2, team2, "50")
+        val result3 = resultDto("1", "25", driver1, team1, "52")
+        val result4 = resultDto("2", "18", driver2, team2, "52")
+        val result5 = resultDto("1", "25", driver1, team1, "53")
+
+        fun raceDto(
+            round: String,
+            name: String,
+            date: String,
+            results: List<ResultDto>,
+        ) = RaceDto(
+            season = "2024",
+            round = round,
+            raceName = name,
+            circuit = circuit,
+            date = date,
+            results = results,
+        )
+
+        every { api.fetchAllResults(2, 0) } returns jolpicaResponse(
+            total = "5",
+            offset = "0",
             raceTable = RaceTable(
-                season = "2024",
-                round = "1",
-                races = listOf(
-                    RaceDto(
-                        season = "2024",
-                        round = "1",
-                        raceName = "Bahrain GP",
-                        circuit = CircuitDto(circuitId = "bahrain", circuitName = "Bahrain"),
-                        date = "2024-03-02",
-                        results = listOf(resultDto),
-                    ),
-                ),
+                races = listOf(raceDto("1", "GP1", "2024-03-02", listOf(result1, result2))),
+            ),
+        )
+        every { api.fetchAllResults(2, 2) } returns jolpicaResponse(
+            total = "5",
+            offset = "2",
+            raceTable = RaceTable(
+                races = listOf(raceDto("2", "GP2", "2024-03-16", listOf(result3, result4))),
+            ),
+        )
+        every { api.fetchAllResults(2, 4) } returns jolpicaResponse(
+            total = "5",
+            offset = "4",
+            raceTable = RaceTable(
+                races = listOf(raceDto("3", "GP3", "2024-03-30", listOf(result5))),
             ),
         )
 
-        val result = client.fetchResults(2024, 1)
+        val allRaces = mutableListOf<RaceDto>()
+        client.forEachPageOfResults { items, _, _, _ -> allRaces.addAll(items) }
 
-        result shouldHaveSize 1
-        result[0].results.shouldNotBeNull() shouldHaveSize 1
+        allRaces shouldHaveSize 3
+        allRaces[0].results.orEmpty() shouldHaveSize 2
+        allRaces[1].results.orEmpty() shouldHaveSize 2
+        allRaces[2].results.orEmpty() shouldHaveSize 1
+
+        verify(exactly = 1) { api.fetchAllResults(2, 0) }
+        verify(exactly = 1) { api.fetchAllResults(2, 2) }
+        verify(exactly = 1) { api.fetchAllResults(2, 4) }
     }
 
     @Test
-    fun `fetchQualifying returns qualifying results for given season and round`() {
-        val qualifyingDto = QualifyingResultDto(
-            number = "1",
-            position = "1",
-            driver = DriverDto(driverId = "max_verstappen", givenName = "Max", familyName = "Verstappen"),
-            constructor = ConstructorDto(constructorId = "red_bull", name = "Red Bull"),
-            q1 = "1:30.000",
-        )
-        every { api.fetchQualifying(2024, 1) } returns jolpicaResponse(
-            raceTable = RaceTable(
-                races = listOf(
-                    RaceDto(
-                        season = "2024",
-                        round = "1",
-                        raceName = "Bahrain GP",
-                        circuit = CircuitDto(circuitId = "bahrain", circuitName = "Bahrain"),
-                        date = "2024-03-02",
-                        qualifyingResults = listOf(qualifyingDto),
-                    ),
-                ),
-            ),
-        )
-
-        val result = client.fetchQualifying(2024, 1)
-
-        result shouldHaveSize 1
-        result[0].qualifyingResults.shouldNotBeNull() shouldHaveSize 1
-    }
-
-    @Test
-    fun `fetchDriverStandings returns standings for given season and round`() {
-        every { api.fetchDriverStandings(2024, 1) } returns jolpicaResponse(
+    fun `forEachPageOfSeasonDriverStandings paginates within a season`() {
+        every { api.fetchSeasonDriverStandings(2024, 2, 0) } returns jolpicaResponse(
+            total = "1",
             standingsTable = StandingsTable(
                 standingsLists = listOf(
                     StandingsListDto(
@@ -225,15 +308,19 @@ class JolpicaApiClientTest {
             ),
         )
 
-        val result = client.fetchDriverStandings(2024, 1)
+        val allItems = mutableListOf<StandingsListDto>()
+        client.forEachPageOfSeasonDriverStandings(2024) { items, _, _, _ -> allItems.addAll(items) }
 
-        result shouldHaveSize 1
-        result[0].driverStandings.shouldNotBeNull() shouldHaveSize 1
+        allItems shouldHaveSize 1
+        allItems[0].driverStandings.shouldNotBeNull() shouldHaveSize 1
+
+        verify(exactly = 1) { api.fetchSeasonDriverStandings(2024, 2, 0) }
     }
 
     @Test
-    fun `fetchConstructorStandings returns standings for given season and round`() {
-        every { api.fetchConstructorStandings(2024, 1) } returns jolpicaResponse(
+    fun `forEachPageOfSeasonConstructorStandings paginates within a season`() {
+        every { api.fetchSeasonConstructorStandings(2024, 2, 0) } returns jolpicaResponse(
+            total = "1",
             standingsTable = StandingsTable(
                 standingsLists = listOf(
                     StandingsListDto(
@@ -253,35 +340,17 @@ class JolpicaApiClientTest {
             ),
         )
 
-        val result = client.fetchConstructorStandings(2024, 1)
+        val allItems = mutableListOf<StandingsListDto>()
+        client.forEachPageOfSeasonConstructorStandings(2024) { items, _, _, _ -> allItems.addAll(items) }
 
-        result shouldHaveSize 1
-        result[0].constructorStandings.shouldNotBeNull() shouldHaveSize 1
+        allItems shouldHaveSize 1
+        allItems[0].constructorStandings.shouldNotBeNull() shouldHaveSize 1
+
+        verify(exactly = 1) { api.fetchSeasonConstructorStandings(2024, 2, 0) }
     }
 
     @Test
-    fun `retry retries on RestClientException and eventually succeeds`() {
-        val retryConfig = RetryConfig.custom<Any>()
-            .maxAttempts(3)
-            .waitDuration(Duration.ofMillis(10))
-            .retryOnException { it is RestClientException }
-            .build()
-        val retryingClient = JolpicaApiClient(api, Retry.of("retry-test", retryConfig), properties)
-
-        every { api.fetchStatuses(2, 0) } throws RestClientException("timeout") andThen
-            jolpicaResponse(
-                total = "1",
-                statusTable = StatusTable(listOf(StatusDto("1", status = "Finished"))),
-            )
-
-        val result = retryingClient.fetchAllStatuses()
-
-        result shouldHaveSize 1
-        verify(exactly = 2) { api.fetchStatuses(2, 0) }
-    }
-
-    @Test
-    fun `retry exhausts attempts and throws on persistent failure`() {
+    fun `retry exhaustion on 429 throws RateLimitExhaustedException`() {
         val retryConfig = RetryConfig.custom<Any>()
             .maxAttempts(2)
             .waitDuration(Duration.ofMillis(10))
@@ -289,13 +358,34 @@ class JolpicaApiClientTest {
             .build()
         val retryingClient = JolpicaApiClient(api, Retry.of("retry-test", retryConfig), properties)
 
-        every { api.fetchStatuses(2, 0) } throws RestClientException("persistent failure")
+        every { api.fetchStatuses(2, 0) } throws
+            HttpClientErrorException.create(
+                HttpStatusCode.valueOf(429),
+                "Too Many Requests",
+                org.springframework.http.HttpHeaders.EMPTY,
+                ByteArray(0),
+                null,
+            )
 
-        assertThrows<RestClientException> {
-            retryingClient.fetchAllStatuses()
+        shouldThrow<RateLimitExhaustedException> {
+            retryingClient.forEachPageOfStatuses { _, _, _, _ -> }
         }
+    }
 
-        verify(exactly = 2) { api.fetchStatuses(2, 0) }
+    @Test
+    fun `retry exhaustion on non-429 throws original exception`() {
+        val retryConfig = RetryConfig.custom<Any>()
+            .maxAttempts(2)
+            .waitDuration(Duration.ofMillis(10))
+            .retryOnException { it is RestClientException }
+            .build()
+        val retryingClient = JolpicaApiClient(api, Retry.of("retry-test", retryConfig), properties)
+
+        every { api.fetchStatuses(2, 0) } throws RestClientException("server error")
+
+        shouldThrow<RestClientException> {
+            retryingClient.forEachPageOfStatuses { _, _, _, _ -> }
+        }
     }
 
     private fun jolpicaResponse(
@@ -303,7 +393,6 @@ class JolpicaApiClientTest {
         offset: String = "0",
         statusTable: StatusTable? = null,
         circuitTable: CircuitTable? = null,
-        seasonTable: SeasonTable? = null,
         raceTable: RaceTable? = null,
         standingsTable: StandingsTable? = null,
     ) = JolpicaResponse(
@@ -313,7 +402,6 @@ class JolpicaApiClientTest {
             limit = properties.pageSize.toString(),
             statusTable = statusTable,
             circuitTable = circuitTable,
-            seasonTable = seasonTable,
             raceTable = raceTable,
             standingsTable = standingsTable,
         ),

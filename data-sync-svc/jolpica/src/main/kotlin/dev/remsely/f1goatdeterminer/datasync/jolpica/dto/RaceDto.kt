@@ -7,7 +7,7 @@ data class RaceTable(
 
     val round: String? = null,
 
-    @param:JsonProperty("Races")
+    @JsonProperty("Races")
     val races: List<RaceDto> = emptyList(),
 )
 
@@ -20,17 +20,17 @@ data class RaceDto(
 
     val raceName: String,
 
-    @param:JsonProperty("Circuit")
+    @JsonProperty("Circuit")
     val circuit: CircuitDto,
 
     val date: String,
 
     val time: String? = null,
 
-    @param:JsonProperty("Results")
+    @JsonProperty("Results")
     val results: List<ResultDto>? = null,
 
-    @param:JsonProperty("QualifyingResults")
+    @JsonProperty("QualifyingResults")
     val qualifyingResults: List<QualifyingResultDto>? = null,
 )
 
@@ -43,10 +43,10 @@ data class ResultDto(
 
     val points: String,
 
-    @param:JsonProperty("Driver")
+    @JsonProperty("Driver")
     val driver: DriverDto,
 
-    @param:JsonProperty("Constructor")
+    @JsonProperty("Constructor")
     val constructor: ConstructorDto,
 
     val grid: String,
@@ -55,10 +55,10 @@ data class ResultDto(
 
     val status: String,
 
-    @param:JsonProperty("Time")
+    @JsonProperty("Time")
     val time: ResultTimeDto? = null,
 
-    @param:JsonProperty("FastestLap")
+    @JsonProperty("FastestLap")
     val fastestLap: FastestLapDto? = null,
 )
 
@@ -72,10 +72,10 @@ data class FastestLapDto(
 
     val lap: String? = null,
 
-    @param:JsonProperty("Time")
+    @JsonProperty("Time")
     val time: FastestLapTimeDto? = null,
 
-    @param:JsonProperty("AverageSpeed")
+    @JsonProperty("AverageSpeed")
     val averageSpeed: AverageSpeedDto? = null,
 )
 
@@ -93,18 +93,18 @@ data class QualifyingResultDto(
 
     val position: String,
 
-    @param:JsonProperty("Driver")
+    @JsonProperty("Driver")
     val driver: DriverDto,
 
-    @param:JsonProperty("Constructor")
+    @JsonProperty("Constructor")
     val constructor: ConstructorDto,
 
-    @param:JsonProperty("Q1")
+    @JsonProperty("Q1")
     val q1: String? = null,
 
-    @param:JsonProperty("Q2")
+    @JsonProperty("Q2")
     val q2: String? = null,
 
-    @param:JsonProperty("Q3")
+    @JsonProperty("Q3")
     val q3: String? = null,
 )

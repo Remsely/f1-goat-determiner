@@ -31,8 +31,8 @@ CREATE TABLE results
     CONSTRAINT fk_results_status
         FOREIGN KEY (status_id) REFERENCES statuses (id),
 
-    CONSTRAINT uk_results_race_driver
-        UNIQUE (race_id, driver_id)
+    CONSTRAINT uk_results_race_driver_position_order
+        UNIQUE (race_id, driver_id, position_order)
 );
 
 CREATE INDEX idx_results_driver_id ON results (driver_id);
