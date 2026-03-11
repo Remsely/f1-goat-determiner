@@ -13,6 +13,7 @@ dependencies {
 
     testRuntimeOnly(libs.junit.platform.launcher)
 
+    testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockk)
 }

@@ -26,17 +26,9 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: chmod +x gradlew
 
-      - name: Run Detekt
+      - name: Build & Test
         working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew detekt
-
-      - name: Build
-        working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew build -x test -x detekt
-
-      - name: Run Tests
-        working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew test
+        run: ./gradlew build
 
       - name: Upload Test Reports
         if: always()
@@ -47,4 +39,3 @@ jobs:
             ${{ inputs.working-directory }}/**/build/reports/tests/
             ${{ inputs.working-directory }}/**/build/test-results/
           retention-days: 7
-

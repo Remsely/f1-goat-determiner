@@ -11,6 +11,8 @@ dependencies {
     implementation(projects.useCase)
 
     implementation(libs.spring.boot.starter)
+    implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.flyway)
     implementation(libs.jetbrains.kotlin.reflect)
 
     testImplementation(libs.spring.boot.starter.test)

@@ -38,6 +38,9 @@ spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-
 
 # Spring
 spring-context = { module = "org.springframework:spring-context" }
+spring-web = { module = "org.springframework:spring-web" }
+spring-data-jpa = { module = "org.springframework.data:spring-data-jpa" }
+spring-jdbc = { module = "org.springframework:spring-jdbc" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
 spring-boot-core = { module = "org.springframework.boot:spring-boot" }
 spring-tx = { module = "org.springframework:spring-tx" }
@@ -53,14 +56,19 @@ jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" 
 resilience4j-ratelimiter = { module = "io.github.resilience4j:resilience4j-ratelimiter", version.ref = "resilience4j" }
 resilience4j-retry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
 
+# JPA
+hibernate-core = { module = "org.hibernate.orm:hibernate-core" }
+
 # Database
 postgresql = { module = "org.postgresql:postgresql" }
+flyway-core = { module = "org.flywaydb:flyway-core" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 
 # Testing
 testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
 spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 kotest-bom = { module = "io.kotest:kotest-bom", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

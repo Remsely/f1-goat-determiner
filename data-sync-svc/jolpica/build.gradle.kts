@@ -7,7 +7,9 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.useCase)
 
-    api(libs.spring.boot.starter.web)
+    implementation(libs.spring.web)
+    implementation(libs.spring.context)
+    implementation(libs.spring.boot.core)
 
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.logging)
