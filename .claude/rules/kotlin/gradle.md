@@ -65,3 +65,17 @@ implementation(libs.flyway.core)
 // db/build.gradle.kts
 api(libs.spring.boot.starter.data.jpa)  // starter in library module
 ```
+
+## Virtual Threads and JVM Lifetime
+
+When `spring.threads.virtual.enabled: true` is set, **all** threads (including `@Scheduled` threads) become virtual
+threads, which are **daemon threads**. A Spring Boot app without an embedded web server will exit immediately after
+the application context starts, because no non-daemon thread keeps the JVM alive.
+
+**Rule:** A scheduled-only Spring Boot app **must** include `spring-boot-starter-web` in `app` to keep the JVM alive
+via Tomcat's non-daemon thread. This also enables actuator health/liveness endpoints for container orchestration.
+
+```kotlin
+// app/build.gradle.kts — required even for scheduler-only apps with virtual threads
+implementation(libs.spring.boot.starter.web)
+```
