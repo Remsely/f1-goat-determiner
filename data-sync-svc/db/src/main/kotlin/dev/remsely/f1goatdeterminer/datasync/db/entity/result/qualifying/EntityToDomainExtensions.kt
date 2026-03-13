@@ -14,4 +14,4 @@ fun QualifyingResultEntity.toDomain() = QualifyingResult(
     q3 = q3,
 )
 
-fun List<QualifyingResultEntity>.toEntity(): List<QualifyingResult> = map { it.toDomain() }
+fun List<QualifyingResultEntity>.toDomain(): List<QualifyingResult> = map { it.toDomain() }

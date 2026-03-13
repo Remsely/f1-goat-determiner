@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 class DataSyncApplication
 
-fun main() {
-    runApplication<DataSyncApplication>()
+@Suppress("SpreadOperator")
+fun main(args: Array<String>) {
+    runApplication<DataSyncApplication>(*args)
 }

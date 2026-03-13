@@ -20,7 +20,12 @@ import org.springframework.transaction.annotation.Transactional
 class TransactionalPersistenceHelper {
 
     /**
-     * Executes the given [block] within a new transaction.
+     * Executes the given [block] within a transaction.
+     *
+     * Uses [Propagation.REQUIRED][org.springframework.transaction.annotation.Propagation.REQUIRED]:
+     * joins an existing transaction if one is active, otherwise creates a new one.
+     * Since callers (entity syncers) are not transactional, this effectively starts a new transaction per call.
+     *
      * Returns the result of the block (typically the number of upserted records).
      */
     @Transactional
