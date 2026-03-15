@@ -1,14 +1,14 @@
 import extensions.detektPlugin
 import extensions.libs
-import dev.detekt.gradle.extensions.DetektExtension
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 
-apply(plugin = libs.plugins.detektV2.plugin.get().pluginId)
+apply(plugin = libs.plugins.detekt.plugin.get().pluginId)
 
 extensions.configure<DetektExtension> {
     buildUponDefaultConfig = true
     allRules = false
 
-    config.setFrom(files("$rootDir/config/detekt/detektV2.yml"))
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
 
     source.setFrom(
         "src/main/kotlin",
@@ -17,5 +17,5 @@ extensions.configure<DetektExtension> {
 }
 
 dependencies {
-    detektPlugin(libs.detektV2.formatting)
+    detektPlugin(libs.detekt.formatting)
 }

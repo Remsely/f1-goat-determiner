@@ -11,8 +11,8 @@ style:
     active: true
 
   MagicNumber:
-    active: true
-    ignoreNumbers: [ '-1', '0', '1', '2' ]
+    active: false
+    ignoreNumbers: [ '-1', '0', '1' ]
     excludes: [ '**/test/**', '**/*Test.kt', '**/*Tests.kt', '**/*Spec.kt' ]
 
   ReturnCount:

@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:18.2-alpine
+    container_name: f1-goat-determiner-postgres
+    environment:
+      POSTGRES_DB: f1_goat_determiner
+      POSTGRES_USER: f1user
+      POSTGRES_PASSWORD: f1password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U f1user -d f1_goat_determiner" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command:
+      - "postgres"
+      - "-c"
+      - "log_statement=all"
+      - "-c"
+      - "log_destination=stderr"
+
+volumes:
+  postgres_data:

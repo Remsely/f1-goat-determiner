@@ -1,4 +1,4 @@
-name: Lint Kotlin
+name: Verify Kotlin
 
 on:
   workflow_call:
@@ -8,8 +8,8 @@ on:
         type: string
 
 jobs:
-  lint:
-    name: Lint Kotlin
+  verify:
+    name: Lint → Build → Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,16 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: chmod +x gradlew
 
-      - name: Run Detekt
+      - name: Build & Test
         working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew detekt
+        run: ./gradlew build
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kotlin-test-reports
+          path: |
+            ${{ inputs.working-directory }}/**/build/reports/tests/
+            ${{ inputs.working-directory }}/**/build/test-results/
+          retention-days: 7

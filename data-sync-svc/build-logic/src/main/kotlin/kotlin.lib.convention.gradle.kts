@@ -23,7 +23,8 @@ extensions.configure<JavaPluginExtension> {
 tasks {
     withType<KotlinCompile> {
         compilerOptions {
-            freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+            freeCompilerArgs.add("-jvm-default=enable")
+            freeCompilerArgs.add("-Xannotation-default-target=param-property")
             jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
         }
     }
