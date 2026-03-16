@@ -81,9 +81,9 @@ Sync jobs are tracked in the DB (`sync_jobs`, `sync_checkpoints` tables). Three 
 
 ### analytics-api Structure
 
-- `src/main.py`: FastAPI app and all route handlers (routes not yet split into `src/api/`).
+- `src/main.py`: FastAPI app and (currently) most route handlers. This reflects the legacy layout; per the Python style guide, **do not add new routes here**. Existing routes will be migrated out over time.
 - `src/analyzers/`: Analysis logic using Pandas/Scikit-learn (clustering).
-- `src/api/`: Placeholder — currently only `__init__.py`. Routes will move here when split.
+- `src/api/`: Target location for FastAPI `APIRouter` modules and route handlers. Currently contains `__init__.py` and any newly added routers; new routes should be defined here rather than in `src/main.py`.
 - `src/core/`: Config (`pydantic-settings`), data loading, preprocessing.
 - `src/models/schemas.py`: Pydantic v2 response schemas.
 
