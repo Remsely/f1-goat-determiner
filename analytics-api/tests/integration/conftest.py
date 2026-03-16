@@ -1,7 +1,7 @@
 """Фикстуры для интеграционных тестов с testcontainers PostgreSQL."""
 
 import os
-from collections.abc import Generator
+from collections.abc import Iterator
 
 import psycopg2
 import pytest
@@ -14,7 +14,7 @@ os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 
 @pytest.fixture(scope="session")
-def postgres_container() -> Generator[PostgresContainer]:
+def postgres_container() -> Iterator[PostgresContainer]:
     """Поднимает PostgreSQL-контейнер на время тестовой сессии."""
     with PostgresContainer("postgres:18.2-alpine") as pg:
         yield pg
@@ -52,7 +52,7 @@ def _setup_test_data(db_params: dict[str, str | int], _init_schema: None) -> Non
 @pytest.fixture(autouse=True)
 def _patch_db_settings(
     monkeypatch: pytest.MonkeyPatch, db_params: dict[str, str | int], _init_schema: None
-) -> Generator[None]:
+) -> Iterator[None]:
     """Переопределяет settings на тестовый PostgreSQL и сбрасывает пул."""
     import src.core.db as db_module
     from src.core import settings
