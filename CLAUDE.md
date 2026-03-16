@@ -81,12 +81,22 @@ Sync jobs are tracked in the DB (`sync_jobs`, `sync_checkpoints` tables). Three 
 
 ### analytics-api Structure
 
+- `src/main.py`: FastAPI app and (currently) most route handlers. This reflects the legacy layout; per the Python style guide, **do not add new routes here**. Existing routes will be migrated out over time.
 - `src/analyzers/`: Analysis logic using Pandas/Scikit-learn (clustering).
-- `src/api/`: FastAPI route handlers.
-- `src/core/`: Config (`pydantic-settings`), data loading from DB, preprocessing.
+- `src/api/`: Target location for FastAPI `APIRouter` modules and route handlers. Currently contains `__init__.py` and any newly added routers; new routes should be defined here rather than in `src/main.py`.
+- `src/core/`: Config (`pydantic-settings`), data loading, preprocessing.
 - `src/models/schemas.py`: Pydantic v2 response schemas.
 
 Currently reads from CSV files in `data/raw/`; being migrated to query PostgreSQL.
+
+### frontend Structure
+
+- `src/pages/`: Top-level page components (`HomePage`, `TierListPage`).
+- `src/components/`: UI components grouped by domain (`common/`, `layout/`, `tierList/`).
+- `src/hooks/`: Custom React hooks (e.g., `useTierList.ts`).
+- `src/api/`: API client (`client.ts`) and typed request functions (`tierList.ts`, `types.ts`).
+- `src/utils/`: Shared utilities (e.g., `pluralize.ts`).
+- `src/styles/`: Global SCSS styles and variables.
 
 ### Database
 

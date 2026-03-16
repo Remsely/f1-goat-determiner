@@ -6,6 +6,26 @@
     "allow": [
       "Bash(cat:*)",
       "WebFetch(domain:api.jolpi.ca)",
+      "mcp__github__add_reply_to_pull_request_comment",
+      "Bash(cd:*)",
+      "Bash(echo:*)",
+      "mcp__github__list_pull_requests",
+      "mcp__github__pull_request_read",
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew :use-case:compileKotlin:*)",
+      "Bash(./gradlew :jolpica:detekt:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew detekt:*)",
+      "Bash(wc:*)",
+      "Bash(./gradlew :scheduled:detekt:*)",
+      "Bash(./gradlew :scheduled:test:*)",
+      "mcp__postgres__query",
+      "Bash(jar tf:*)",
+      "Bash(./gradlew :db:test:*)",
+      "Bash(./gradlew :app:test:*)",
+      "Bash(./gradlew :jolpica:test:*)",
+      "Bash(gunzip:*)",
+      "Bash(gzip -dk logs/*.gz 2>&1)",
       "Bash(curl:*)"
     ],
     "deny": [
@@ -33,5 +53,33 @@
     "claude-code-setup@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true
   },
-  "language": "russian"
+  "language": "russian",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format-python.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format-typescript.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/guard-migration.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
