@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from 'react';
-import {tierListApi} from '@/api/tierList';
-import type {TierListResponse} from '@/api/types';
+import { useCallback, useEffect, useState } from 'react';
+import { tierListApi } from '@/api/tierList';
+import type { TierListResponse } from '@/api/types';
 
 export interface UseTierListOptions {
   initialNTiers?: number;
@@ -25,7 +25,7 @@ export interface UseTierListReturn {
 }
 
 export function useTierList(options: UseTierListOptions = {}): UseTierListReturn {
-  const {initialNTiers = 4, initialMinRaces = 10} = options;
+  const { initialNTiers = 4, initialMinRaces = 10 } = options;
 
   const [data, setData] = useState<TierListResponse | null>(null);
   const [loading, setLoading] = useState(true);
