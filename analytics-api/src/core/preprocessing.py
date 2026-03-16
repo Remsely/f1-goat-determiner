@@ -30,18 +30,12 @@ class F1Preprocessor:
     def build_features(self) -> pd.DataFrame:
         """Строит таблицу признаков для всех пилотов."""
 
-        results = self._loader.results().copy()
-        races = self._loader.races().copy()
-        drivers = self._loader.drivers().copy()
-        driver_standings = self._loader.driver_standings().copy()
-        constructor_standings = self._loader.constructor_standings().copy()
-        qualifying = self._loader.qualifying().copy()
-
-        if self.seasons:
-            races = races[races["year"].isin(self.seasons)]
-            race_ids = races["raceId"].tolist()
-            results = results[results["raceId"].isin(race_ids)]
-            qualifying = qualifying[qualifying["raceId"].isin(race_ids)]
+        results = self._loader.results(seasons=self.seasons)
+        races = self._loader.races(seasons=self.seasons)
+        drivers = self._loader.drivers()
+        driver_standings = self._loader.driver_standings(seasons=self.seasons)
+        constructor_standings = self._loader.constructor_standings(seasons=self.seasons)
+        qualifying = self._loader.qualifying(seasons=self.seasons)
 
         # === Поулы из квалификации ===
         poles_by_driver = (
@@ -64,9 +58,6 @@ class F1Preprocessor:
         final_standings = driver_standings.merge(year_final_race, left_on="raceId", right_on="final_raceId")[
             ["driverId", "year", "position", "points"]
         ]
-
-        if self.seasons:
-            final_standings = final_standings[final_standings["year"].isin(self.seasons)]
 
         drivers_per_season = final_standings.groupby("year")["driverId"].nunique().reset_index()
         drivers_per_season.columns = ["year", "total_drivers"]

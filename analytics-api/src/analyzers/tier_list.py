@@ -1,9 +1,17 @@
+import logging
+import time
+
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 from ..core.preprocessing import F1Preprocessor
 from .base import BaseAnalyzer
+
+logger = logging.getLogger(__name__)
+
+_CACHE_MAX_SIZE = 100
+_CACHE_TTL_SECONDS = 300  # 5 минут
 
 
 class TierListAnalyzer(BaseAnalyzer):
@@ -15,7 +23,7 @@ class TierListAnalyzer(BaseAnalyzer):
         "win_rate_scaled",
         "podium_rate_scaled",
         "pole_rate_scaled",
-        "avg_grid_scaled",  # TODO: сделать grid_vs_team
+        "avg_grid_scaled",
         "best_finish_scaled",
         "grid_vs_finish_scaled",
         "avg_championship_position_pct_scaled",
@@ -87,6 +95,7 @@ class TierListAnalyzer(BaseAnalyzer):
         result = self._build_response()
         _cache_result(cache_key, result)
 
+        logger.info("Tier list generated: %d drivers, %d tiers", len(full_data), self.n_tiers)
         return result
 
     def _make_cache_key(self) -> str:
@@ -137,7 +146,7 @@ class TierListAnalyzer(BaseAnalyzer):
                 "count": len(drivers),
                 "avg_win_rate": round(tier_data["win_rate"].mean(), 2),
                 "avg_podium_rate": round(tier_data["podium_rate"].mean(), 2),
-                "avg_pole_rate": round(tier_data["pole_rate"].mean(), 2),  # Добавлено!
+                "avg_pole_rate": round(tier_data["pole_rate"].mean(), 2),
                 "avg_finish": round(tier_data["avg_finish"].mean(), 2),
                 "drivers": drivers,
             }
@@ -155,19 +164,25 @@ class TierListAnalyzer(BaseAnalyzer):
         }
 
 
-_cache: dict[str, dict] = {}
-_CACHE_MAX_SIZE = 100
+_cache: dict[str, tuple[float, dict]] = {}
 
 
 def _get_cached_result(key: str) -> dict | None:
-    return _cache.get(key)
+    entry = _cache.get(key)
+    if entry is None:
+        return None
+    created_at, result = entry
+    if time.monotonic() - created_at > _CACHE_TTL_SECONDS:
+        del _cache[key]
+        return None
+    return result
 
 
 def _cache_result(key: str, result: dict) -> None:
     if len(_cache) >= _CACHE_MAX_SIZE:
-        first_key = next(iter(_cache))
-        del _cache[first_key]
-    _cache[key] = result
+        oldest_key = min(_cache, key=lambda k: _cache[k][0])
+        del _cache[oldest_key]
+    _cache[key] = (time.monotonic(), result)
 
 
 def clear_cache() -> None:

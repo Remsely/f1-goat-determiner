@@ -35,6 +35,7 @@ jobs:
               - 'analytics-api/ruff.toml'
               - 'analytics-api/Dockerfile'
               - '.github/workflows/lint-python.yml'
+              - '.github/workflows/test-python.yml'
               - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
@@ -75,9 +76,16 @@ jobs:
     with:
       working-directory: './analytics-api'
 
+  analytics-api-test:
+    name: Analytics API - Test
+    needs: analytics-api-lint
+    uses: ./.github/workflows/test-python.yml
+    with:
+      working-directory: './analytics-api'
+
   analytics-api-build:
     name: Analytics API - Build & Push
-    needs: analytics-api-lint
+    needs: analytics-api-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
