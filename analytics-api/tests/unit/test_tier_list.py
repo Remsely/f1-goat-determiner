@@ -132,3 +132,27 @@ class TestTierListAnalyzer:
         for tier in result["tiers"].values():
             win_rates = [d["stats"]["win_rate"] for d in tier["drivers"]]
             assert win_rates == sorted(win_rates, reverse=True)
+
+    def test_tier_has_avg_metrics_fields(self) -> None:
+        analyzer = TierListAnalyzer(n_tiers=2, min_races=1)
+        result = analyzer.analyze()
+
+        for tier in result["tiers"].values():
+            assert "avg_win_rate" in tier
+            assert "avg_podium_rate" in tier
+            assert "avg_pole_rate" in tier
+            assert "avg_finish" in tier
+
+    def test_top_tier_has_higher_win_rate_than_bottom(self) -> None:
+        analyzer = TierListAnalyzer(n_tiers=2, min_races=1)
+        result = analyzer.analyze()
+
+        tiers = list(result["tiers"].values())
+        assert tiers[0]["avg_win_rate"] >= tiers[-1]["avg_win_rate"]
+
+    def test_top_tier_has_better_podium_rate_than_bottom(self) -> None:
+        analyzer = TierListAnalyzer(n_tiers=2, min_races=1)
+        result = analyzer.analyze()
+
+        tiers = list(result["tiers"].values())
+        assert tiers[0]["avg_podium_rate"] >= tiers[-1]["avg_podium_rate"]

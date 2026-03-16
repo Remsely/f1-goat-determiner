@@ -1,5 +1,6 @@
 """Тесты кеша TierListAnalyzer."""
 
+import threading
 import time
 from unittest.mock import patch
 
@@ -56,3 +57,47 @@ class TestCache:
 
         assert len(_cache) == 0
         assert _get_cached_result("key1") is None
+
+    def test_concurrent_writes_do_not_corrupt_cache(self) -> None:
+        """Конкурентные записи не нарушают состояние кеша."""
+
+        def write_entries(thread_id: int) -> None:
+            for i in range(10):
+                _cache_result(f"key_{thread_id}_{i}", {"thread": thread_id, "i": i})
+
+        threads = [threading.Thread(target=write_entries, args=(n,)) for n in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(_cache) <= _CACHE_MAX_SIZE
+
+    def test_concurrent_reads_and_writes_thread_safe(self) -> None:
+        """Чтение и запись в разных потоках не вызывают ошибок."""
+        _cache_result("shared_key", {"value": 42})
+
+        errors: list[Exception] = []
+
+        def read_loop() -> None:
+            for _ in range(50):
+                try:
+                    _get_cached_result("shared_key")
+                except Exception as e:
+                    errors.append(e)
+
+        def write_loop() -> None:
+            for i in range(50):
+                try:
+                    _cache_result(f"write_{i}", {"i": i})
+                except Exception as e:
+                    errors.append(e)
+
+        threads = [threading.Thread(target=read_loop) for _ in range(3)]
+        threads += [threading.Thread(target=write_loop) for _ in range(3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors == []

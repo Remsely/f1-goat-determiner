@@ -1,5 +1,6 @@
 """Тесты для F1Preprocessor."""
 
+import pandas as pd
 import pytest
 
 from src.core.preprocessing import F1Preprocessor
@@ -152,3 +153,126 @@ class TestGetScaledFeatures:
 
         assert len(data) == len(scaled_df)
         assert len(data.columns) > len(scaled_df.columns)
+
+
+class TestSmartFillPoleRate:
+    """Тесты _smart_fill_pole_rate() — умное заполнение pole_rate."""
+
+    def _preprocessor(self) -> F1Preprocessor:
+        # Создаём экземпляр без __init__ — метод не использует self._loader
+        return F1Preprocessor.__new__(F1Preprocessor)
+
+    def _make_df(
+        self,
+        total_poles: list[int],
+        win_rate: list[float],
+        podium_rate: list[float],
+        pole_rate: list[float],
+    ) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "total_poles": total_poles,
+                "win_rate": win_rate,
+                "podium_rate": podium_rate,
+                "pole_rate": pole_rate,
+            }
+        )
+
+    def test_fewer_than_5_pole_drivers_returns_unchanged(self) -> None:
+        """Если < 5 пилотов с поулами — DataFrame не изменяется."""
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 0],  # 4 с поулами < 5
+            win_rate=[50.0, 40.0, 30.0, 20.0, 10.0],
+            podium_rate=[80.0, 60.0, 50.0, 40.0, 30.0],
+            pole_rate=[25.0, 20.0, 10.0, 5.0, 0.0],
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        assert result.loc[4, "pole_rate"] == pytest.approx(0.0)
+
+    def test_fewer_than_3_poles_and_wins_returns_unchanged(self) -> None:
+        """Если < 3 пилотов с поулами И победами — DataFrame не изменяется."""
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 1, 0],  # 5 с поулами, но только 2 с победами
+            win_rate=[50.0, 40.0, 0.0, 0.0, 0.0, 10.0],
+            podium_rate=[80.0, 60.0, 50.0, 40.0, 30.0, 20.0],
+            pole_rate=[25.0, 15.0, 10.0, 8.0, 5.0, 0.0],
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        assert result.loc[5, "pole_rate"] == pytest.approx(0.0)
+
+    def test_fills_pole_rate_from_win_rate(self) -> None:
+        """Пилот без поулов, но с победами — pole_rate заполняется через win_rate."""
+        # Все поул-пилоты имеют одинаковое соотношение pole_rate/win_rate = 0.5
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 1, 0],
+            win_rate=[40.0, 30.0, 20.0, 10.0, 5.0, 20.0],
+            podium_rate=[80.0, 70.0, 60.0, 50.0, 30.0, 60.0],
+            pole_rate=[20.0, 15.0, 10.0, 5.0, 2.5, 0.0],  # pole/win = 0.5 везде
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        # avg_pole_win_ratio = 0.5; заполнено: 20.0 * 0.5 = 10.0
+        assert result.loc[5, "pole_rate"] == pytest.approx(10.0)
+
+    def test_fills_pole_rate_from_podium_rate_using_actual_ratio(self) -> None:
+        """Нет побед, есть подиумы — pole_rate заполняется через podium_rate с реальным соотношением."""
+        # Поул-пилот без побед: pole_rate=8, podium_rate=40 → ratio=0.2
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 1, 0],
+            win_rate=[40.0, 30.0, 20.0, 10.0, 0.0, 0.0],  # driver 4: poles+no wins
+            podium_rate=[80.0, 70.0, 60.0, 50.0, 40.0, 30.0],
+            pole_rate=[20.0, 15.0, 10.0, 5.0, 8.0, 0.0],  # driver 4: pole/podium=0.2
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        # podium_pole_ratio = 8/40 = 0.2; заполнено: 30 * 0.2 = 6.0
+        assert result.loc[5, "pole_rate"] == pytest.approx(6.0)
+
+    def test_fills_pole_rate_from_podium_rate_with_default_ratio(self) -> None:
+        """Нет пилотов с поулами+без побед — используется дефолтный ratio=0.2."""
+        # Все поул-пилоты имеют победы → with_poles_no_wins пуст → podium_pole_ratio=0.2
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 1, 0],
+            win_rate=[40.0, 30.0, 20.0, 10.0, 5.0, 0.0],  # driver 5: no wins, no poles
+            podium_rate=[80.0, 70.0, 60.0, 50.0, 30.0, 30.0],
+            pole_rate=[20.0, 15.0, 10.0, 5.0, 2.5, 0.0],
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        # podium_pole_ratio = 0.2 (default); заполнено: 30 * 0.2 = 6.0
+        assert result.loc[5, "pole_rate"] == pytest.approx(6.0)
+
+    def test_no_wins_no_podiums_stays_zero(self) -> None:
+        """Нет ни побед, ни подиумов — pole_rate остаётся 0."""
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 1, 0],
+            win_rate=[40.0, 30.0, 20.0, 10.0, 5.0, 0.0],
+            podium_rate=[80.0, 70.0, 60.0, 50.0, 30.0, 0.0],  # driver 5: no podiums
+            pole_rate=[20.0, 15.0, 10.0, 5.0, 2.5, 0.0],
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        assert result.loc[5, "pole_rate"] == pytest.approx(0.0)
+
+    def test_drivers_with_poles_pole_rate_unchanged(self) -> None:
+        """Поул-ставки пилотов с реальными поулами не изменяются."""
+        df = self._make_df(
+            total_poles=[1, 1, 1, 1, 1, 0],
+            win_rate=[40.0, 30.0, 20.0, 10.0, 5.0, 20.0],
+            podium_rate=[80.0, 70.0, 60.0, 50.0, 30.0, 60.0],
+            pole_rate=[20.0, 15.0, 10.0, 5.0, 2.5, 0.0],
+        )
+
+        result = self._preprocessor()._smart_fill_pole_rate(df)
+
+        assert result.loc[0, "pole_rate"] == pytest.approx(20.0)
+        assert result.loc[1, "pole_rate"] == pytest.approx(15.0)
+        assert result.loc[2, "pole_rate"] == pytest.approx(10.0)
