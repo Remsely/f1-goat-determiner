@@ -13,6 +13,7 @@ FILE=$(echo "$INPUT" | grep -o '"file_path" *: *"[^"]*"' | head -1 | sed 's/"fil
 RELATIVE="${FILE#*frontend/}"
 [[ "$RELATIVE" != "$FILE" ]] || exit 0
 
-cd frontend || exit 0
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$REPO_ROOT/frontend" || exit 0
 bunx prettier --write "$RELATIVE" 2>/dev/null || true
 bunx eslint --fix "$RELATIVE" 2>/dev/null || true

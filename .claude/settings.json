@@ -77,11 +77,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/format-python.sh"
+            "command": "bash $(git rev-parse --show-toplevel)/.claude/hooks/format-python.sh"
           },
           {
             "type": "command",
-            "command": "bash .claude/hooks/format-typescript.sh"
+            "command": "bash $(git rev-parse --show-toplevel)/.claude/hooks/format-typescript.sh"
           }
         ]
       }
@@ -92,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/guard-migration.sh"
+            "command": "bash $(git rev-parse --show-toplevel)/.claude/hooks/guard-migration.sh"
           }
         ]
       }
