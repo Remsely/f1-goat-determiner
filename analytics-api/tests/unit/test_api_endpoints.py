@@ -36,7 +36,7 @@ class TestSeasonsErrorPaths:
             response = client.get("/seasons")
 
         assert response.status_code == 500
-        assert "БД" in response.json()["detail"]
+        assert "базе данных" in response.json()["detail"]
 
 
 class TestStatsErrorPaths:

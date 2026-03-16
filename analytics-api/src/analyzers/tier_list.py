@@ -1,4 +1,5 @@
 import logging
+import threading
 import time
 
 import pandas as pd
@@ -168,25 +169,29 @@ class TierListAnalyzer(BaseAnalyzer):
 
 
 _cache: dict[str, tuple[float, dict]] = {}
+_cache_lock = threading.Lock()
 
 
 def _get_cached_result(key: str) -> dict | None:
-    entry = _cache.get(key)
-    if entry is None:
-        return None
-    created_at, result = entry
-    if time.monotonic() - created_at > _CACHE_TTL_SECONDS:
-        del _cache[key]
-        return None
-    return result
+    with _cache_lock:
+        entry = _cache.get(key)
+        if entry is None:
+            return None
+        created_at, result = entry
+        if time.monotonic() - created_at > _CACHE_TTL_SECONDS:
+            del _cache[key]
+            return None
+        return result
 
 
 def _cache_result(key: str, result: dict) -> None:
-    if len(_cache) >= _CACHE_MAX_SIZE:
-        oldest_key = min(_cache, key=lambda k: _cache[k][0])
-        del _cache[oldest_key]
-    _cache[key] = (time.monotonic(), result)
+    with _cache_lock:
+        if len(_cache) >= _CACHE_MAX_SIZE:
+            oldest_key = min(_cache, key=lambda k: _cache[k][0])
+            del _cache[oldest_key]
+        _cache[key] = (time.monotonic(), result)
 
 
 def clear_cache() -> None:
-    _cache.clear()
+    with _cache_lock:
+        _cache.clear()

@@ -24,7 +24,7 @@ def get_seasons() -> SeasonsResponse:
         seasons = loader.get_available_seasons()
     except psycopg2.Error as e:
         logger.error("Database error in /seasons", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Ошибка подключения к БД: {e}") from e
+        raise HTTPException(status_code=500, detail="Ошибка при обращении к базе данных") from e
 
     if not seasons:
         raise HTTPException(status_code=503, detail="Нет данных. Выполните синхронизацию через data-sync-svc.")
@@ -45,7 +45,7 @@ def get_stats() -> DataStatsResponse:
         seasons = loader.get_available_seasons()
     except psycopg2.Error as e:
         logger.error("Database error in /stats", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Ошибка подключения к БД: {e}") from e
+        raise HTTPException(status_code=500, detail="Ошибка при обращении к базе данных") from e
 
     if not seasons:
         raise HTTPException(status_code=503, detail="Нет данных. Выполните синхронизацию через data-sync-svc.")

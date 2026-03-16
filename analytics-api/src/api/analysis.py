@@ -1,5 +1,6 @@
 import logging
 
+import psycopg2
 from fastapi import APIRouter, HTTPException, Query
 
 from ..analyzers import TierListAnalyzer
@@ -42,6 +43,9 @@ def get_tier_list(
         return analyzer.analyze()
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except psycopg2.Error as e:
+        logger.error("Database error during tier list generation", exc_info=True)
+        raise HTTPException(status_code=500, detail="Ошибка при обращении к базе данных") from e
     except Exception as e:
         logger.error("Tier list generation failed", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера") from e

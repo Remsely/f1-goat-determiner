@@ -3,14 +3,14 @@ services:
     image: postgres:18.2-alpine
     container_name: f1-goat-determiner-postgres
     environment:
-      POSTGRES_DB: f1_goat_determiner
-      POSTGRES_USER: f1user
-      POSTGRES_PASSWORD: f1password
+      POSTGRES_DB: ${POSTGRES_DB:-f1_goat_determiner}
+      POSTGRES_USER: ${POSTGRES_USER:-f1user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U f1user -d f1_goat_determiner"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-f1user} -d ${POSTGRES_DB:-f1_goat_determiner}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,9 +25,9 @@ services:
       - PYTHONUNBUFFERED=1
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=f1_goat_determiner
-      - DB_USER=f1user
-      - DB_PASSWORD=f1password
+      - DB_NAME=${POSTGRES_DB:-f1_goat_determiner}
+      - DB_USER=${POSTGRES_USER:-f1user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     depends_on:
       postgres:
         condition: service_healthy
