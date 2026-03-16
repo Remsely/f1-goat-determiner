@@ -1,4 +1,5 @@
 import logging
+import threading
 
 import pandas as pd
 import psycopg2
@@ -9,21 +10,25 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 _connection_pool: pool.ThreadedConnectionPool | None = None
+_pool_lock = threading.Lock()
 
 
 def get_connection_pool() -> pool.ThreadedConnectionPool:
     """Возвращает пул соединений, создавая его при необходимости."""
     global _connection_pool
-    if _connection_pool is None or _connection_pool.closed:
-        _connection_pool = pool.ThreadedConnectionPool(
-            minconn=1,
-            maxconn=5,
-            host=settings.db_host,
-            port=settings.db_port,
-            dbname=settings.db_name,
-            user=settings.db_user,
-            password=settings.db_password,
-        )
+    if _connection_pool is not None and not _connection_pool.closed:
+        return _connection_pool
+    with _pool_lock:
+        if _connection_pool is None or _connection_pool.closed:
+            _connection_pool = pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=5,
+                host=settings.db_host,
+                port=settings.db_port,
+                dbname=settings.db_name,
+                user=settings.db_user,
+                password=settings.db_password,
+            )
     return _connection_pool
 
 
