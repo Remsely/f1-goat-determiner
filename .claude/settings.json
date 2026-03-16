@@ -26,7 +26,21 @@
       "Bash(./gradlew :jolpica:test:*)",
       "Bash(gunzip:*)",
       "Bash(gzip -dk logs/*.gz 2>&1)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_select_option",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__postgres__query",
+      "Bash(pip install:*)",
+      "Bash(where python:*)",
+      "Bash(netstat:*)",
+      "Bash(python:*)",
+      "Bash(ls:*)"
     ],
     "deny": [
       "Read(.env)",

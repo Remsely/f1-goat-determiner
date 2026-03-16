@@ -1,3 +1,12 @@
+---
+name: check-all
+description: >
+    Full lint and test run across all services (data-sync-svc, analytics-api, frontend).
+    Use when the user asks to verify everything is green, run all checks, or validate the project
+    before a commit or PR.
+allowed-tools: Bash
+---
+
 # Check All — Full Lint & Test Run Across All Services
 
 Run lint and tests for all three services. All steps are mandatory. Report results at the end.
@@ -46,8 +55,8 @@ Record: ESLint passed / failed, Prettier passed / failed.
 
 Produce a concise table:
 
-| Service       | Lint  | Tests     |
-|---------------|-------|-----------|
+| Service       | Lint    | Tests     |
+|---------------|---------|-----------|
 | data-sync-svc | ✅ / ❌ | ✅ N/N / ❌ |
 | analytics-api | ✅ / ❌ | ✅ N/N / ❌ |
 | frontend      | ✅ / ❌ | —         |
