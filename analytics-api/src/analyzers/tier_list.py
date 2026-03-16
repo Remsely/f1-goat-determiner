@@ -5,8 +5,8 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from ..core.preprocessing import F1Preprocessor
 from .base import BaseAnalyzer
+from ..core.preprocessing import F1Preprocessor
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,9 @@ class TierListAnalyzer(BaseAnalyzer):
 
         available_cols = [c for c in self.SCALED_COLS if c in full_data.columns]
         features = full_data[available_cols]
+
+        if features.isnull().any().any():
+            raise ValueError("Данные содержат пропуски. Попробуйте другой диапазон сезонов или снизьте минимум гонок.")
 
         kmeans = KMeans(n_clusters=self.n_tiers, random_state=42, n_init="auto")
         full_data["cluster"] = kmeans.fit_predict(features)

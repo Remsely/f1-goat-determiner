@@ -67,12 +67,13 @@ class ConstructorStandingSyncerTest {
     }
 
     @Test
-    fun `resumes from checkpoint lastSeason`() {
+    fun `resumes from checkpoint lastSeason skipping earlier seasons`() {
         every { grandPrixFinder.findAllSeasons() } returns listOf(2023, 2024)
         every { grandPrixFinder.findAllSeasonRoundToId() } returns mapOf((2024 to 1) to 2)
         every { constructorFinder.findAllRefToId() } returns mapOf("ferrari" to 1)
 
-        every { constructorStandingFetcher.forEachPageOfSeasonConstructorStandings(2024, 50, any()) } answers {
+        // Standings always re-fetch from offset 0 because Jolpica returns only the latest round
+        every { constructorStandingFetcher.forEachPageOfSeasonConstructorStandings(2024, 0, any()) } answers {
             val callback = thirdArg<(PageFetchResult<FetchedConstructorStanding>) -> Unit>()
             callback(PageFetchResult(listOf(testStanding(2024, 1)), 1, 1, 100))
             PaginationSummary(apiCalls = 1)

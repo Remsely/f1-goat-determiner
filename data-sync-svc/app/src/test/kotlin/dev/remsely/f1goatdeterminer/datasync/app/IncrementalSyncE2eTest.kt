@@ -123,16 +123,17 @@ class IncrementalSyncE2eTest : BaseE2eTest() {
             tableName = "RaceTable",
             collectionName = "Races",
         )
+        // Standings always re-fetch from offset 0 (Jolpica returns only the latest round)
         stubEmptyCollection(
             path = "/$season/driverStandings.json",
-            offset = offset,
+            offset = 0,
             total = 1,
             tableName = "StandingsTable",
             collectionName = "StandingsLists",
         )
         stubEmptyCollection(
             path = "/$season/constructorStandings.json",
-            offset = offset,
+            offset = 0,
             total = 1,
             tableName = "StandingsTable",
             collectionName = "StandingsLists",

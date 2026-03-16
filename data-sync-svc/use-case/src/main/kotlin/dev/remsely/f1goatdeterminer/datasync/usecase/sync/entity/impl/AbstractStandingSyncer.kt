@@ -70,7 +70,10 @@ abstract class AbstractStandingSyncer<D, F>(
         for (season in seasons) {
             if (resumeSeason != null && season < resumeSeason) continue
 
-            val seasonStartOffset = if (season == resumeSeason) checkpoint.lastOffset else 0
+            // Always start from offset 0: the Jolpica standings endpoint returns only
+            // the latest round's data with total = number of drivers. Re-fetching from 0
+            // lets us detect when a new round has been completed.
+            val seasonStartOffset = 0
 
             val summary = forEachPageOfSeasonStandings(season, seasonStartOffset) { page ->
                 val bySeason = page.items.groupBy { getSeason(it) }
