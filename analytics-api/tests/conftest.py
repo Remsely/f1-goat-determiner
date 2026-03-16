@@ -52,6 +52,15 @@ class FakeDataLoader:
     def qualifying(self, seasons: list[int] | None = None) -> pd.DataFrame:
         return self._filter_by_seasons(self._qualifying, seasons)
 
+    def count_races(self) -> int:
+        return len(self._races)
+
+    def count_drivers(self) -> int:
+        return len(self._drivers)
+
+    def count_results(self) -> int:
+        return len(self._results)
+
     def get_available_seasons(self) -> list[int]:
         return sorted(self._races["year"].unique().tolist())
 

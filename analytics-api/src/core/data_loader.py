@@ -123,6 +123,18 @@ class F1DataLoader:
 
         return read_sql(query)
 
+    def count_races(self) -> int:
+        df = read_sql("SELECT COUNT(*) AS count FROM races")
+        return int(df["count"].iloc[0])
+
+    def count_drivers(self) -> int:
+        df = read_sql("SELECT COUNT(*) AS count FROM drivers")
+        return int(df["count"].iloc[0])
+
+    def count_results(self) -> int:
+        df = read_sql("SELECT COUNT(*) AS count FROM results")
+        return int(df["count"].iloc[0])
+
     def get_available_seasons(self) -> list[int]:
         """Список всех доступных сезонов."""
         df = read_sql("SELECT DISTINCT season FROM races ORDER BY season")

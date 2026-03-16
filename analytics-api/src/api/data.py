@@ -51,8 +51,8 @@ def get_stats() -> DataStatsResponse:
         raise HTTPException(status_code=503, detail="Нет данных. Выполните синхронизацию через data-sync-svc.")
 
     return DataStatsResponse(
-        total_races=len(loader.races()),
-        total_drivers=len(loader.drivers()),
-        total_results=len(loader.results()),
+        total_races=loader.count_races(),
+        total_drivers=loader.count_drivers(),
+        total_results=loader.count_results(),
         seasons=SeasonStats(first=seasons[0], last=seasons[-1], count=len(seasons)),
     )
