@@ -1,12 +1,14 @@
 """Тесты для TierListAnalyzer."""
 
+from collections.abc import Generator
+
 import pytest
 
 from src.analyzers.tier_list import TierListAnalyzer, clear_cache
 
 
 @pytest.fixture(autouse=True)
-def _clear_tier_cache():
+def _clear_tier_cache() -> Generator[None]:
     """Очищаем кэш перед каждым тестом."""
     clear_cache()
     yield

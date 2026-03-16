@@ -9,8 +9,8 @@ FILE=$(echo "$INPUT" | grep -o '"file_path" *: *"[^"]*"' | head -1 | sed 's/"fil
 [[ "$FILE" == *.ts || "$FILE" == *.tsx ]] || exit 0
 [[ -f "$FILE" ]] || exit 0
 
-# Make path relative to frontend/
-RELATIVE="${FILE#*/frontend/}"
+# Make path relative to frontend/ — handles both absolute and repo-relative paths
+RELATIVE="${FILE#*frontend/}"
 [[ "$RELATIVE" != "$FILE" ]] || exit 0
 
 cd frontend || exit 0

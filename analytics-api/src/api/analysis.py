@@ -46,6 +46,3 @@ def get_tier_list(
     except psycopg2.Error as e:
         logger.error("Database error during tier list generation", exc_info=True)
         raise HTTPException(status_code=500, detail="Ошибка при обращении к базе данных") from e
-    except Exception as e:
-        logger.error("Tier list generation failed", exc_info=True)
-        raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера") from e
