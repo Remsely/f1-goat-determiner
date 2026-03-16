@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import psycopg2
 import pytest
+from psycopg2 import pool
 
 import src.core.db as db_module
 
@@ -80,6 +81,17 @@ class TestReadSql:
                     db_module.read_sql("SELECT 1")
 
         assert exc_info.value is original_error
+
+    def test_pool_error_on_getconn_skips_cleanup(self) -> None:
+        """Если getconn() бросил PoolError — rollback/putconn не вызываются (conn=None)."""
+        mock_pool = MagicMock()
+        mock_pool.getconn.side_effect = pool.PoolError("pool exhausted")
+
+        with patch("src.core.db.get_connection_pool", return_value=mock_pool):
+            with pytest.raises(pool.PoolError):
+                db_module.read_sql("SELECT 1")
+
+        mock_pool.putconn.assert_not_called()
 
 
 class TestCloseConnectionPool:

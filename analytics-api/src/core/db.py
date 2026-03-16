@@ -35,15 +35,18 @@ def get_connection_pool() -> pool.ThreadedConnectionPool:
 def read_sql(query: str, params: tuple | dict | None = None) -> pd.DataFrame:
     """Выполняет SQL-запрос и возвращает результат как DataFrame."""
     p = get_connection_pool()
-    conn = p.getconn()
+    conn = None
     try:
+        conn = p.getconn()
         return pd.read_sql(query, conn, params=params)
     except psycopg2.Error:
-        conn.reset()
+        if conn is not None:
+            conn.reset()
         raise
     finally:
-        conn.rollback()
-        p.putconn(conn)
+        if conn is not None:
+            conn.rollback()
+            p.putconn(conn)
 
 
 def check_db_connection() -> bool:

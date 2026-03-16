@@ -18,7 +18,11 @@ router = APIRouter(tags=["Analysis"])
     responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
 )
 def get_tier_list(
-    seasons: str | None = Query(None, description="Сезоны через запятую", examples=["2020,2021,2022,2023,2024"]),
+    seasons: str | None = Query(
+        None,
+        description="Сезоны через запятую",
+        openapi_examples={"example": {"value": "2020,2021,2022,2023,2024"}},
+    ),
     n_tiers: int = Query(4, ge=2, le=6, description="Количество тиров (от 2 до 6)"),
     min_races: int = Query(10, ge=1, le=100, description="Минимум гонок для включения пилота"),
 ) -> TierListResponse:
