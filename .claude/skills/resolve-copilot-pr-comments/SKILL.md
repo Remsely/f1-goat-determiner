@@ -29,6 +29,8 @@ Process for handling review comments (Copilot or human) on the current branch's 
 
 7. **Push code** — ALWAYS use `mcp__github__push_files` to push changed files (and `mcp__github__delete_file` for
    deleted files). Never use `git push` — SSH keys are not available and it will always fail.
+   Note: workflow files (`.github/workflows/`) require `workflow` scope. If push fails with 403, ask the user to run
+   `gh auth refresh -h github.com -s workflow` and then `git push` manually.
 
 8. **Reply to comments** — use `mcp__github__add_reply_to_pull_request_comment` to reply to each comment explaining what
    was fixed (or why it's a false positive).

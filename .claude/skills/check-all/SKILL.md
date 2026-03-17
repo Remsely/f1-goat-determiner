@@ -51,15 +51,23 @@ cd frontend && bun run lint && bun run format:check
 
 Record: ESLint passed / failed, Prettier passed / failed.
 
-## Step 6: Summary Report
+## Step 6: frontend — Tests
+
+```bash
+cd frontend && bun run test:run
+```
+
+Record: total tests, passed, failed. If failures — list failing test names and error summaries.
+
+## Step 7: Summary Report
 
 Produce a concise table:
 
-| Service       | Lint    | Tests     |
-|---------------|---------|-----------|
+| Service       | Lint    | Tests       |
+|---------------|---------|-------------|
 | data-sync-svc | ✅ / ❌ | ✅ N/N / ❌ |
 | analytics-api | ✅ / ❌ | ✅ N/N / ❌ |
-| frontend      | ✅ / ❌ | —         |
+| frontend      | ✅ / ❌ | ✅ N/N / ❌ |
 
 If any step failed — list the issues grouped by service and suggest fixes.
 Overall verdict: **all green** / **action required**.
