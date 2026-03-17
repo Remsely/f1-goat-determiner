@@ -77,8 +77,7 @@ jobs:
 
   analytics-api-test:
     name: Analytics API - Test
-    needs: [ detect-changes, analytics-api-lint ]
-    if: needs.detect-changes.outputs.analytics-api == 'true'
+    needs: analytics-api-lint
     uses: ./.github/workflows/test-python.yml
     with:
       working-directory: './analytics-api'
@@ -93,16 +92,14 @@ jobs:
 
   frontend-test:
     name: Frontend - Test
-    needs: [ detect-changes, frontend-lint ]
-    if: needs.detect-changes.outputs.frontend == 'true'
+    needs: frontend-lint
     uses: ./.github/workflows/test-typescript.yml
     with:
       working-directory: './frontend'
 
   frontend-build:
     name: Frontend - Build
-    needs: [ detect-changes, frontend-test ]
-    if: needs.detect-changes.outputs.frontend == 'true'
+    needs: frontend-test
     uses: ./.github/workflows/build-typescript.yml
     with:
       working-directory: './frontend'
