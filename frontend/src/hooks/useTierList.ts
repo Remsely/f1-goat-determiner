@@ -29,7 +29,8 @@ export function useTierList(options: UseTierListOptions = {}): UseTierListReturn
 
   const [data, setData] = useState<TierListResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [seasonsError, setSeasonsError] = useState<string | null>(null);
+  const [tierListError, setTierListError] = useState<string | null>(null);
 
   const [availableSeasons, setAvailableSeasons] = useState<number[]>([]);
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
@@ -37,15 +38,20 @@ export function useTierList(options: UseTierListOptions = {}): UseTierListReturn
   const [minRaces, setMinRaces] = useState(initialMinRaces);
 
   useEffect(() => {
-    tierListApi.getSeasons().then((res) => {
-      setAvailableSeasons(res.seasons);
-    });
+    tierListApi
+      .getSeasons()
+      .then((res) => {
+        setAvailableSeasons(res.seasons);
+      })
+      .catch(() => {
+        setSeasonsError('Failed to load available seasons');
+      });
   }, []);
 
   const loadTierList = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setTierListError(null);
       const result = await tierListApi.getTierList({
         seasons: selectedSeasons.length > 0 ? selectedSeasons : undefined,
         nTiers,
@@ -66,7 +72,7 @@ export function useTierList(options: UseTierListOptions = {}): UseTierListReturn
         typeof err.response.data.detail === 'string'
           ? err.response.data.detail
           : null;
-      setError(detail ?? 'Failed to load data');
+      setTierListError(detail ?? 'Failed to load data');
       console.error(err);
     } finally {
       setLoading(false);
@@ -80,7 +86,7 @@ export function useTierList(options: UseTierListOptions = {}): UseTierListReturn
   return {
     data,
     loading,
-    error,
+    error: tierListError ?? seasonsError,
     availableSeasons,
     selectedSeasons,
     setSelectedSeasons,

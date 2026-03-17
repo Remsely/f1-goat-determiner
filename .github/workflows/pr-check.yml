@@ -36,9 +36,14 @@ jobs:
             frontend:
               - 'frontend/src/**'
               - 'frontend/package.json'
+              - 'frontend/bun.lock'
+              - 'frontend/vite.config.ts'
+              - 'frontend/tsconfig*.json'
               - 'frontend/eslint.config.js'
               - 'frontend/.prettierrc.json'
               - '.github/workflows/lint-typescript.yml'
+              - '.github/workflows/test-typescript.yml'
+              - '.github/workflows/build-typescript.yml'
               - '.github/workflows/pr-check.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
@@ -72,8 +77,7 @@ jobs:
 
   analytics-api-test:
     name: Analytics API - Test
-    needs: [ detect-changes, analytics-api-lint ]
-    if: needs.detect-changes.outputs.analytics-api == 'true'
+    needs: analytics-api-lint
     uses: ./.github/workflows/test-python.yml
     with:
       working-directory: './analytics-api'
@@ -83,6 +87,20 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
     uses: ./.github/workflows/lint-typescript.yml
+    with:
+      working-directory: './frontend'
+
+  frontend-test:
+    name: Frontend - Test
+    needs: frontend-lint
+    uses: ./.github/workflows/test-typescript.yml
+    with:
+      working-directory: './frontend'
+
+  frontend-build:
+    name: Frontend - Build
+    needs: frontend-test
+    uses: ./.github/workflows/build-typescript.yml
     with:
       working-directory: './frontend'
 
@@ -105,22 +123,38 @@ jobs:
   pr-check-status:
     name: PR Status Summary
     runs-on: ubuntu-latest
-    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, data-sync-verify, nginx-lint ]
+    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, frontend-build, data-sync-verify, nginx-lint ]
     if: always()
     steps:
       - name: Check results
         run: |
-          echo "Analytics API Lint: ${{ needs.analytics-api-lint.result }}"
-          echo "Analytics API Test: ${{ needs.analytics-api-test.result }}"
-          echo "Frontend: ${{ needs.frontend-lint.result }}"
-          echo "Data Sync: ${{ needs.data-sync-verify.result }}"
-          echo "Nginx: ${{ needs.nginx-lint.result }}"
+          FAILED=false
 
-          if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
-             [ "${{ needs.analytics-api-test.result }}" == "failure" ] || \
-             [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
-             [ "${{ needs.data-sync-verify.result }}" == "failure" ] || \
-             [ "${{ needs.nginx-lint.result }}" == "failure" ]; then
+          if [[ "${{ needs.detect-changes.result }}" != "success" ]]; then
+            echo "❌ Detect Changes: ${{ needs.detect-changes.result }}"
+            FAILED=true
+          fi
+
+          check() {
+            local service="$1"
+            local changed="$2"
+            local result="$3"
+            if [[ "$changed" == "true" && "$result" != "success" ]]; then
+              echo "❌ $service: $result"
+              FAILED=true
+            else
+              echo "✅ $service: ${result:-skipped}"
+            fi
+          }
+
+          check "Analytics API - Lint"  "${{ needs.detect-changes.outputs.analytics-api }}" "${{ needs.analytics-api-lint.result }}"
+          check "Analytics API - Test"  "${{ needs.detect-changes.outputs.analytics-api }}" "${{ needs.analytics-api-test.result }}"
+          check "Frontend - Lint"       "${{ needs.detect-changes.outputs.frontend }}"      "${{ needs.frontend-lint.result }}"
+          check "Frontend - Build"      "${{ needs.detect-changes.outputs.frontend }}"      "${{ needs.frontend-build.result }}"
+          check "Data Sync"             "${{ needs.detect-changes.outputs.data-sync-svc }}" "${{ needs.data-sync-verify.result }}"
+          check "Nginx"                 "${{ needs.detect-changes.outputs.nginx }}"         "${{ needs.nginx-lint.result }}"
+
+          if [[ "$FAILED" == "true" ]]; then
             echo "❌ Some checks failed"
             exit 1
           fi

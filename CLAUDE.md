@@ -58,6 +58,8 @@ bun run lint         # ESLint
 bun run lint:fix     # ESLint with auto-fix
 bun run format       # Prettier format
 bun run format:check # Prettier check
+bun run test         # Run tests (watch mode)
+bun run test:run     # Run tests once (CI)
 ```
 
 ## Architecture
@@ -105,6 +107,7 @@ Reads from PostgreSQL via `F1DataLoader` (psycopg2 + pandas). DB connection mana
 - `src/api/`: API client (`client.ts`) and typed request functions (`tierList.ts`, `types.ts`).
 - `src/utils/`: Shared utilities (e.g., `pluralize.ts`).
 - `src/styles/`: Global SCSS styles and variables.
+- `src/test/`: Test setup (`setup.ts`), MSW mock handlers (`mocks/`), shared fixtures (`fixtures.ts`).
 
 ### Database
 
