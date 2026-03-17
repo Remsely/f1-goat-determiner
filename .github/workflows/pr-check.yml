@@ -123,33 +123,31 @@ jobs:
   pr-check-status:
     name: PR Status Summary
     runs-on: ubuntu-latest
-    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, frontend-test, frontend-build, data-sync-verify, nginx-lint ]
+    needs: [ detect-changes, analytics-api-test, frontend-build, data-sync-verify, nginx-lint ]
     if: always()
     steps:
       - name: Check results
         run: |
-          echo "Analytics API Lint: ${{ needs.analytics-api-lint.result }}"
-          echo "Analytics API Test: ${{ needs.analytics-api-test.result }}"
-          echo "Frontend Lint: ${{ needs.frontend-lint.result }}"
-          echo "Frontend Test: ${{ needs.frontend-test.result }}"
-          echo "Frontend Build: ${{ needs.frontend-build.result }}"
-          echo "Data Sync: ${{ needs.data-sync-verify.result }}"
-          echo "Nginx: ${{ needs.nginx-lint.result }}"
+          FAILED=false
 
-          if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
-             [ "${{ needs.analytics-api-lint.result }}" == "cancelled" ] || \
-             [ "${{ needs.analytics-api-test.result }}" == "failure" ] || \
-             [ "${{ needs.analytics-api-test.result }}" == "cancelled" ] || \
-             [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
-             [ "${{ needs.frontend-lint.result }}" == "cancelled" ] || \
-             [ "${{ needs.frontend-test.result }}" == "failure" ] || \
-             [ "${{ needs.frontend-test.result }}" == "cancelled" ] || \
-             [ "${{ needs.frontend-build.result }}" == "failure" ] || \
-             [ "${{ needs.frontend-build.result }}" == "cancelled" ] || \
-             [ "${{ needs.data-sync-verify.result }}" == "failure" ] || \
-             [ "${{ needs.data-sync-verify.result }}" == "cancelled" ] || \
-             [ "${{ needs.nginx-lint.result }}" == "failure" ] || \
-             [ "${{ needs.nginx-lint.result }}" == "cancelled" ]; then
+          check() {
+            local service="$1"
+            local changed="$2"
+            local result="$3"
+            if [[ "$changed" == "true" && "$result" != "success" ]]; then
+              echo "❌ $service: $result"
+              FAILED=true
+            else
+              echo "✅ $service: ${result:-skipped}"
+            fi
+          }
+
+          check "Analytics API" "${{ needs.detect-changes.outputs.analytics-api }}" "${{ needs.analytics-api-test.result }}"
+          check "Frontend"      "${{ needs.detect-changes.outputs.frontend }}"       "${{ needs.frontend-build.result }}"
+          check "Data Sync"     "${{ needs.detect-changes.outputs.data-sync-svc }}"  "${{ needs.data-sync-verify.result }}"
+          check "Nginx"         "${{ needs.detect-changes.outputs.nginx }}"          "${{ needs.nginx-lint.result }}"
+
+          if [[ "$FAILED" == "true" ]]; then
             echo "❌ Some checks failed"
             exit 1
           fi
