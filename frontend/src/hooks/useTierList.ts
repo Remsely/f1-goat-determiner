@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { tierListApi } from '@/api/tierList';
 import type { TierListResponse } from '@/api/types';
 
@@ -52,8 +52,21 @@ export function useTierList(options: UseTierListOptions = {}): UseTierListReturn
         minRaces,
       });
       setData(result);
-    } catch (err) {
-      setError('Failed to load data');
+    } catch (err: unknown) {
+      const detail =
+        err != null &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response != null &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data != null &&
+        typeof err.response.data === 'object' &&
+        'detail' in err.response.data &&
+        typeof err.response.data.detail === 'string'
+          ? err.response.data.detail
+          : null;
+      setError(detail ?? 'Failed to load data');
       console.error(err);
     } finally {
       setLoading(false);

@@ -30,18 +30,12 @@ class F1Preprocessor:
     def build_features(self) -> pd.DataFrame:
         """Строит таблицу признаков для всех пилотов."""
 
-        results = self._loader.results().copy()
-        races = self._loader.races().copy()
-        drivers = self._loader.drivers().copy()
-        driver_standings = self._loader.driver_standings().copy()
-        constructor_standings = self._loader.constructor_standings().copy()
-        qualifying = self._loader.qualifying().copy()
-
-        if self.seasons:
-            races = races[races["year"].isin(self.seasons)]
-            race_ids = races["raceId"].tolist()
-            results = results[results["raceId"].isin(race_ids)]
-            qualifying = qualifying[qualifying["raceId"].isin(race_ids)]
+        results = self._loader.results(seasons=self.seasons)
+        races = self._loader.races(seasons=self.seasons)
+        drivers = self._loader.drivers()
+        driver_standings = self._loader.driver_standings(seasons=self.seasons)
+        constructor_standings = self._loader.constructor_standings(seasons=self.seasons)
+        qualifying = self._loader.qualifying(seasons=self.seasons)
 
         # === Поулы из квалификации ===
         poles_by_driver = (
@@ -49,11 +43,17 @@ class F1Preprocessor:
         )
 
         # === Сила команды по сезонам ===
-        year_final_race = races.groupby("year")["raceId"].max().reset_index()
-        year_final_race.columns = ["year", "final_raceId"]
+        # Берём последнюю гонку, для которой реально есть standings (не max из расписания)
+        constructor_final_race = (
+            constructor_standings.merge(races[["raceId", "year"]], on="raceId")
+            .groupby("year")["raceId"]
+            .max()
+            .reset_index()
+            .rename(columns={"raceId": "final_raceId"})
+        )
 
         team_strength = (
-            constructor_standings.merge(year_final_race, left_on="raceId", right_on="final_raceId")
+            constructor_standings.merge(constructor_final_race, left_on="raceId", right_on="final_raceId")
             .groupby(["constructorId", "year"])["position"]
             .min()
             .reset_index()
@@ -61,12 +61,17 @@ class F1Preprocessor:
         team_strength.columns = ["constructorId", "year", "team_position"]
 
         # === Позиция в чемпионате ===
-        final_standings = driver_standings.merge(year_final_race, left_on="raceId", right_on="final_raceId")[
+        driver_final_race = (
+            driver_standings.merge(races[["raceId", "year"]], on="raceId")
+            .groupby("year")["raceId"]
+            .max()
+            .reset_index()
+            .rename(columns={"raceId": "final_raceId"})
+        )
+
+        final_standings = driver_standings.merge(driver_final_race, left_on="raceId", right_on="final_raceId")[
             ["driverId", "year", "position", "points"]
         ]
-
-        if self.seasons:
-            final_standings = final_standings[final_standings["year"].isin(self.seasons)]
 
         drivers_per_season = final_standings.groupby("year")["driverId"].nunique().reset_index()
         drivers_per_season.columns = ["year", "total_drivers"]
@@ -203,9 +208,15 @@ class F1Preprocessor:
 
         data = self._data.copy()
 
+        if data.empty:
+            raise ValueError(
+                "Нет пилотов с достаточным количеством гонок. Снизьте минимум гонок или расширьте диапазон сезонов."
+            )
+
         for col in self.FEATURE_COLS:
             if col in data.columns:
-                data[col] = data[col].fillna(data[col].median())
+                fill_value = data[col].median()
+                data[col] = data[col].fillna(fill_value if pd.notna(fill_value) else 0.0)
 
         scaler = StandardScaler()
         available_cols = [c for c in self.FEATURE_COLS if c in data.columns]

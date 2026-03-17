@@ -1,3 +1,12 @@
+---
+name: sync-report
+description: >
+    Full analysis of the latest data-sync-svc run.
+    Use when the user asks to check sync status, verify data integrity,
+    analyze sync jobs, or review data-sync-svc logs.
+disable-model-invocation: true
+---
+
 # Sync Report — Full Analysis of data-sync-svc Run
 
 Perform a comprehensive analysis of the latest data-sync-svc run. All steps are mandatory.
@@ -80,7 +89,8 @@ Job #N [TYPE] ─── step1 ─── step2 ─── ... ─── COMPLETED/
                   │ duration │ duration        │
 ```
 
-When drawing diagrams, carefully align each line to the same character width to avoid broken lines or misaligned columns.
+When drawing diagrams, carefully align each line to the same character width to avoid broken lines or misaligned
+columns.
 
 ### 4. Error Handling
 

@@ -5,28 +5,43 @@
   "permissions": {
     "allow": [
       "Bash(cat:*)",
-      "WebFetch(domain:api.jolpi.ca)",
-      "mcp__github__add_reply_to_pull_request_comment",
+      "Bash(ls:*)",
       "Bash(cd:*)",
       "Bash(echo:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:api.jolpi.ca)",
+      "Bash(curl:*)",
+      "mcp__github__add_reply_to_pull_request_comment",
       "mcp__github__list_pull_requests",
       "mcp__github__pull_request_read",
-      "Bash(./gradlew build:*)",
+      "mcp__github__push_files",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_select_option",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
       "Bash(./gradlew :use-case:compileKotlin:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew detekt:*)",
+      "Bash(./gradlew :scheduled:detekt:*)",
       "Bash(./gradlew :jolpica:detekt:*)",
       "Bash(./gradlew test:*)",
-      "Bash(./gradlew detekt:*)",
-      "Bash(wc:*)",
-      "Bash(./gradlew :scheduled:detekt:*)",
-      "Bash(./gradlew :scheduled:test:*)",
-      "mcp__postgres__query",
-      "Bash(jar tf:*)",
       "Bash(./gradlew :db:test:*)",
       "Bash(./gradlew :app:test:*)",
       "Bash(./gradlew :jolpica:test:*)",
+      "Bash(./gradlew :scheduled:test:*)",
+      "mcp__postgres__query",
+      "Bash(jar tf:*)",
       "Bash(gunzip:*)",
       "Bash(gzip -dk logs/*.gz 2>&1)",
-      "Bash(curl:*)"
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(where python:*)",
+      "Bash(bun run:*)",
+      "Bash(netstat:*)"
     ],
     "deny": [
       "Read(.env)",
@@ -51,7 +66,8 @@
     "feature-dev@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true
+    "pr-review-toolkit@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
   },
   "language": "russian",
   "hooks": {
@@ -61,11 +77,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/format-python.sh"
+            "command": "bash $(git rev-parse --show-toplevel)/.claude/hooks/format-python.sh"
           },
           {
             "type": "command",
-            "command": "bash .claude/hooks/format-typescript.sh"
+            "command": "bash $(git rev-parse --show-toplevel)/.claude/hooks/format-typescript.sh"
           }
         ]
       }
@@ -76,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/guard-migration.sh"
+            "command": "bash $(git rev-parse --show-toplevel)/.claude/hooks/guard-migration.sh"
           }
         ]
       }

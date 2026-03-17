@@ -1,0 +1,24 @@
+name: Test Python
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  test:
+    name: Test Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: pip install ".[dev]"
+      - name: Run tests
+        working-directory: ${{ inputs.working-directory }}
+        run: pytest -v --tb=short

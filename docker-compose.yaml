@@ -1,4 +1,25 @@
 services:
+  postgres:
+    image: postgres:18.2-alpine
+    container_name: f1-goat-determiner-postgres
+    environment:
+      POSTGRES_DB: f1_goat_determiner
+      POSTGRES_USER: f1user
+      POSTGRES_PASSWORD: f1password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U f1user -d f1_goat_determiner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - f1-network
+
   analytics-api:
     build:
       context: ./analytics-api
@@ -6,6 +27,14 @@ services:
     container_name: f1-goat-analytics-api
     environment:
       - PYTHONUNBUFFERED=1
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=f1_goat_determiner
+      - DB_USER=f1user
+      - DB_PASSWORD=f1password
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - f1-network
@@ -30,13 +59,14 @@ services:
     volumes:
       - frontend-static:/usr/share/nginx/html:ro
     depends_on:
-      - backend
+      - analytics-api
       - frontend
     restart: unless-stopped
     networks:
       - f1-network
 
 volumes:
+  postgres_data:
   frontend-static:
 
 networks:

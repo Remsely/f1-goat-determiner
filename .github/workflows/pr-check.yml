@@ -31,6 +31,7 @@ jobs:
               - 'analytics-api/pyproject.toml'
               - 'analytics-api/ruff.toml'
               - '.github/workflows/lint-python.yml'
+              - '.github/workflows/test-python.yml'
               - '.github/workflows/pr-check.yml'
             frontend:
               - 'frontend/src/**'
@@ -69,6 +70,14 @@ jobs:
     with:
       working-directory: './analytics-api'
 
+  analytics-api-test:
+    name: Analytics API - Test
+    needs: [ detect-changes, analytics-api-lint ]
+    if: needs.detect-changes.outputs.analytics-api == 'true'
+    uses: ./.github/workflows/test-python.yml
+    with:
+      working-directory: './analytics-api'
+
   frontend-lint:
     name: Frontend - Lint
     needs: detect-changes
@@ -96,17 +105,19 @@ jobs:
   pr-check-status:
     name: PR Status Summary
     runs-on: ubuntu-latest
-    needs: [ detect-changes, analytics-api-lint, frontend-lint, data-sync-verify, nginx-lint ]
+    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, data-sync-verify, nginx-lint ]
     if: always()
     steps:
       - name: Check results
         run: |
-          echo "Analytics API: ${{ needs.analytics-api-lint.result }}"
+          echo "Analytics API Lint: ${{ needs.analytics-api-lint.result }}"
+          echo "Analytics API Test: ${{ needs.analytics-api-test.result }}"
           echo "Frontend: ${{ needs.frontend-lint.result }}"
           echo "Data Sync: ${{ needs.data-sync-verify.result }}"
           echo "Nginx: ${{ needs.nginx-lint.result }}"
 
           if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
+             [ "${{ needs.analytics-api-test.result }}" == "failure" ] || \
              [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
              [ "${{ needs.data-sync-verify.result }}" == "failure" ] || \
              [ "${{ needs.nginx-lint.result }}" == "failure" ]; then
