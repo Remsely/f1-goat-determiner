@@ -48,6 +48,7 @@ jobs:
               - 'frontend/Dockerfile'
               - '.github/workflows/lint-typescript.yml'
               - '.github/workflows/test-typescript.yml'
+              - '.github/workflows/build-typescript.yml'
               - '.github/workflows/main-ci.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
@@ -133,9 +134,17 @@ jobs:
     with:
       working-directory: './frontend'
 
+  frontend-build-check:
+    name: Frontend - Build
+    needs: [ detect-changes, frontend-test ]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/build-typescript.yml
+    with:
+      working-directory: './frontend'
+
   frontend-build:
     name: Frontend - Build & Push
-    needs: frontend-test
+    needs: frontend-build-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

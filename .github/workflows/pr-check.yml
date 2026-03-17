@@ -43,6 +43,7 @@ jobs:
               - 'frontend/.prettierrc.json'
               - '.github/workflows/lint-typescript.yml'
               - '.github/workflows/test-typescript.yml'
+              - '.github/workflows/build-typescript.yml'
               - '.github/workflows/pr-check.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
@@ -98,6 +99,14 @@ jobs:
     with:
       working-directory: './frontend'
 
+  frontend-build:
+    name: Frontend - Build
+    needs: [ detect-changes, frontend-test ]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/build-typescript.yml
+    with:
+      working-directory: './frontend'
+
   data-sync-verify:
     name: Data Sync - Verify
     needs: detect-changes
@@ -117,7 +126,7 @@ jobs:
   pr-check-status:
     name: PR Status Summary
     runs-on: ubuntu-latest
-    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, frontend-test, data-sync-verify, nginx-lint ]
+    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, frontend-test, frontend-build, data-sync-verify, nginx-lint ]
     if: always()
     steps:
       - name: Check results
@@ -126,6 +135,7 @@ jobs:
           echo "Analytics API Test: ${{ needs.analytics-api-test.result }}"
           echo "Frontend Lint: ${{ needs.frontend-lint.result }}"
           echo "Frontend Test: ${{ needs.frontend-test.result }}"
+          echo "Frontend Build: ${{ needs.frontend-build.result }}"
           echo "Data Sync: ${{ needs.data-sync-verify.result }}"
           echo "Nginx: ${{ needs.nginx-lint.result }}"
 
@@ -137,6 +147,8 @@ jobs:
              [ "${{ needs.frontend-lint.result }}" == "cancelled" ] || \
              [ "${{ needs.frontend-test.result }}" == "failure" ] || \
              [ "${{ needs.frontend-test.result }}" == "cancelled" ] || \
+             [ "${{ needs.frontend-build.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-build.result }}" == "cancelled" ] || \
              [ "${{ needs.data-sync-verify.result }}" == "failure" ] || \
              [ "${{ needs.data-sync-verify.result }}" == "cancelled" ] || \
              [ "${{ needs.nginx-lint.result }}" == "failure" ] || \
