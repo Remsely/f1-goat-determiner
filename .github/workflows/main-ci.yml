@@ -40,6 +40,9 @@ jobs:
             frontend:
               - 'frontend/src/**'
               - 'frontend/package.json'
+              - 'frontend/bun.lock'
+              - 'frontend/vite.config.ts'
+              - 'frontend/tsconfig*.json'
               - 'frontend/eslint.config.js'
               - 'frontend/.prettierrc.json'
               - 'frontend/Dockerfile'
