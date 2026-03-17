@@ -39,6 +39,7 @@ jobs:
               - 'frontend/eslint.config.js'
               - 'frontend/.prettierrc.json'
               - '.github/workflows/lint-typescript.yml'
+              - '.github/workflows/test-typescript.yml'
               - '.github/workflows/pr-check.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
@@ -86,6 +87,14 @@ jobs:
     with:
       working-directory: './frontend'
 
+  frontend-test:
+    name: Frontend - Test
+    needs: [ detect-changes, frontend-lint ]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/test-typescript.yml
+    with:
+      working-directory: './frontend'
+
   data-sync-verify:
     name: Data Sync - Verify
     needs: detect-changes
@@ -105,20 +114,22 @@ jobs:
   pr-check-status:
     name: PR Status Summary
     runs-on: ubuntu-latest
-    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, data-sync-verify, nginx-lint ]
+    needs: [ detect-changes, analytics-api-lint, analytics-api-test, frontend-lint, frontend-test, data-sync-verify, nginx-lint ]
     if: always()
     steps:
       - name: Check results
         run: |
           echo "Analytics API Lint: ${{ needs.analytics-api-lint.result }}"
           echo "Analytics API Test: ${{ needs.analytics-api-test.result }}"
-          echo "Frontend: ${{ needs.frontend-lint.result }}"
+          echo "Frontend Lint: ${{ needs.frontend-lint.result }}"
+          echo "Frontend Test: ${{ needs.frontend-test.result }}"
           echo "Data Sync: ${{ needs.data-sync-verify.result }}"
           echo "Nginx: ${{ needs.nginx-lint.result }}"
 
           if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
              [ "${{ needs.analytics-api-test.result }}" == "failure" ] || \
              [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-test.result }}" == "failure" ] || \
              [ "${{ needs.data-sync-verify.result }}" == "failure" ] || \
              [ "${{ needs.nginx-lint.result }}" == "failure" ]; then
             echo "❌ Some checks failed"

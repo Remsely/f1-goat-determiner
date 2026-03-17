@@ -44,6 +44,7 @@ jobs:
               - 'frontend/.prettierrc.json'
               - 'frontend/Dockerfile'
               - '.github/workflows/lint-typescript.yml'
+              - '.github/workflows/test-typescript.yml'
               - '.github/workflows/main-ci.yml'
             data-sync-svc:
               - 'data-sync-svc/app/**'
@@ -120,9 +121,16 @@ jobs:
     with:
       working-directory: './frontend'
 
+  frontend-test:
+    name: Frontend - Test
+    needs: frontend-lint
+    uses: ./.github/workflows/test-typescript.yml
+    with:
+      working-directory: './frontend'
+
   frontend-build:
     name: Frontend - Build & Push
-    needs: frontend-lint
+    needs: frontend-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
