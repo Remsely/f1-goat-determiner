@@ -130,6 +130,11 @@ jobs:
         run: |
           FAILED=false
 
+          if [[ "${{ needs.detect-changes.result }}" != "success" ]]; then
+            echo "❌ Detect Changes: ${{ needs.detect-changes.result }}"
+            FAILED=true
+          fi
+
           check() {
             local service="$1"
             local changed="$2"
