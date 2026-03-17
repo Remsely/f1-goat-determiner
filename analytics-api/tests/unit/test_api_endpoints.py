@@ -42,7 +42,7 @@ class TestSeasonsErrorPaths:
 class TestStatsErrorPaths:
     def test_returns_503_when_no_data(self) -> None:
         with patch("src.api.data.get_data_loader") as mock_loader:
-            mock_loader.return_value.get_available_seasons.return_value = []
+            mock_loader.return_value.get_data_stats.return_value = None
             client = TestClient(app)
             response = client.get("/stats")
 
@@ -50,7 +50,7 @@ class TestStatsErrorPaths:
 
     def test_returns_500_on_db_error(self) -> None:
         with patch("src.api.data.get_data_loader") as mock_loader:
-            mock_loader.return_value.get_available_seasons.side_effect = psycopg2.OperationalError("connection refused")
+            mock_loader.return_value.get_data_stats.side_effect = psycopg2.OperationalError("connection refused")
             client = TestClient(app)
             response = client.get("/stats")
 

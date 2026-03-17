@@ -61,7 +61,7 @@ def check_db_connection() -> bool:
         finally:
             conn.rollback()
             p.putconn(conn)
-    except psycopg2.Error:
+    except (psycopg2.Error, pool.PoolError):
         logger.warning("Database health check failed", exc_info=True)
         return False
 

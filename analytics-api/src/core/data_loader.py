@@ -1,6 +1,18 @@
+from dataclasses import dataclass
+
 import pandas as pd
 
 from .db import read_sql
+
+
+@dataclass
+class F1Stats:
+    total_seasons: int
+    first_season: int
+    last_season: int
+    total_races: int
+    total_drivers: int
+    total_results: int
 
 
 class F1DataLoader:
@@ -139,6 +151,29 @@ class F1DataLoader:
         """Список всех доступных сезонов."""
         df = read_sql("SELECT DISTINCT season FROM races ORDER BY season")
         return df["season"].tolist()
+
+    def get_data_stats(self) -> F1Stats | None:
+        """Возвращает агрегированную статистику одним запросом. None если данных нет."""
+        df = read_sql("""
+            SELECT
+                (SELECT COUNT(DISTINCT season) FROM races) AS total_seasons,
+                (SELECT MIN(season)            FROM races) AS first_season,
+                (SELECT MAX(season)            FROM races) AS last_season,
+                (SELECT COUNT(*)               FROM races) AS total_races,
+                (SELECT COUNT(*)               FROM drivers) AS total_drivers,
+                (SELECT COUNT(*)               FROM results) AS total_results
+        """)
+        row = df.iloc[0]
+        if int(row["total_seasons"]) == 0:
+            return None
+        return F1Stats(
+            total_seasons=int(row["total_seasons"]),
+            first_season=int(row["first_season"]),
+            last_season=int(row["last_season"]),
+            total_races=int(row["total_races"]),
+            total_drivers=int(row["total_drivers"]),
+            total_results=int(row["total_results"]),
+        )
 
 
 _loader: F1DataLoader | None = None

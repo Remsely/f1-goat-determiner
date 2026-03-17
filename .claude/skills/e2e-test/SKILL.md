@@ -45,11 +45,13 @@ netstat -ano | grep ":8000" | grep LISTEN
 ```
 
 If port 8000 is free:
+
 ```bash
 cd analytics-api && .venv/Scripts/python.exe -m uvicorn src.main:app --reload --port 8000
 ```
 
 If port 8000 is occupied, use 8001 and update `frontend/vite.config.ts` proxy target to `http://localhost:8001`:
+
 ```bash
 cd analytics-api && .venv/Scripts/python.exe -m uvicorn src.main:app --reload --port 8001
 ```
@@ -208,7 +210,7 @@ Test each era preset produces different results:
 4. Find the lowest tier
 5. **Verify:** Drivers there have significantly lower stats (low win rate, few podiums)
 
-### TC-17: Latest Season Works
+### TC-16: Latest Season Works
 
 This test guards against regressions where the current (in-progress) season breaks the tier list
 due to incomplete standings data.
@@ -219,10 +221,12 @@ due to incomplete standings data.
 4. **Verify:** Tier list loads successfully — no "Failed to load" error
 5. **Verify:** Drivers count > 0
 6. **Verify:** Number of tiers equals the selected value (e.g. 4)
-7. Set "Minimum Races" higher than the number of races completed in the season (e.g. "5+" for a season with only 2 races done)
-8. **Verify:** An informative error message is shown (NOT a generic "Failed to load data", but a message about insufficient races)
+7. Set "Minimum Races" higher than the number of races completed in the season (e.g. "5+" for a season with only 2 races
+   done)
+8. **Verify:** An informative error message is shown (NOT a generic "Failed to load data", but a message about
+   insufficient races)
 
-### TC-16: Error State (Optional)
+### TC-17: Error State (Optional)
 
 1. Stop the analytics-api server
 2. Reload the tier list page
