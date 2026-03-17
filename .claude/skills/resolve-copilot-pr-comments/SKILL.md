@@ -1,5 +1,5 @@
 ---
-name: review-pr-comments
+name: resolve-copilot-pr-comments
 description: Review and fix Copilot/reviewer comments on the current PR. Reads all review comments, assesses validity, fixes issues, runs checks, pushes code, and replies to comments.
 ---
 
@@ -27,7 +27,8 @@ Process for handling review comments (Copilot or human) on the current branch's 
 
 6. **Run checks** — execute `/check-all` or equivalent: lint + tests for all affected services.
 
-7. **Push code** — ALWAYS use `mcp__github__push_files` to push changed files (and `mcp__github__delete_file` for deleted files). Never use `git push` — SSH keys are not available and it will always fail.
+7. **Push code** — ALWAYS use `mcp__github__push_files` to push changed files (and `mcp__github__delete_file` for
+   deleted files). Never use `git push` — SSH keys are not available and it will always fail.
 
 8. **Reply to comments** — use `mcp__github__add_reply_to_pull_request_comment` to reply to each comment explaining what
    was fixed (or why it's a false positive).
