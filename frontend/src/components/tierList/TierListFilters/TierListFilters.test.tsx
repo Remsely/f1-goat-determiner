@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { TierListFilters } from './TierListFilters';
@@ -55,7 +55,7 @@ describe('TierListFilters', () => {
 
     render(<TierListFilters {...defaultProps} onNTiersChange={onNTiersChange} />);
 
-    const tierSelect = screen.getByText('Number of Tiers').parentElement!.querySelector('select')!;
+    const tierSelect = within(screen.getByText('Number of Tiers').closest('div')!).getByRole('combobox');
     await user.selectOptions(tierSelect, '5');
 
     expect(onNTiersChange).toHaveBeenCalledWith(5);
@@ -67,7 +67,7 @@ describe('TierListFilters', () => {
 
     render(<TierListFilters {...defaultProps} onMinRacesChange={onMinRacesChange} />);
 
-    const minRacesSelect = screen.getByText('Minimum Races').parentElement!.querySelector('select')!;
+    const minRacesSelect = within(screen.getByText('Minimum Races').closest('div')!).getByRole('combobox');
     await user.selectOptions(minRacesSelect, '50');
 
     expect(onMinRacesChange).toHaveBeenCalledWith(50);

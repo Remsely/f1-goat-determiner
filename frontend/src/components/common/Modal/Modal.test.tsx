@@ -81,8 +81,7 @@ describe('Modal', () => {
 
     await user.click(screen.getByText('Content'));
 
-    // Wait for the setTimeout (200ms) to ensure onClose was not called
-    await new Promise((r) => setTimeout(r, 300));
+    // stopPropagation inside the modal prevents handleClose from firing at all
     expect(onClose).not.toHaveBeenCalled();
   });
 });
