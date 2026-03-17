@@ -37,9 +37,14 @@ export function useTierList(options: UseTierListOptions = {}): UseTierListReturn
   const [minRaces, setMinRaces] = useState(initialMinRaces);
 
   useEffect(() => {
-    tierListApi.getSeasons().then((res) => {
-      setAvailableSeasons(res.seasons);
-    });
+    tierListApi
+      .getSeasons()
+      .then((res) => {
+        setAvailableSeasons(res.seasons);
+      })
+      .catch(() => {
+        setError('Failed to load available seasons');
+      });
   }, []);
 
   const loadTierList = useCallback(async () => {

@@ -32,7 +32,7 @@ export const TierCard = ({ name, tier, onDriverClick }: TierCardProps) => {
             <div className={styles.stats}>
               <span>Avg. wins: {tier.avg_win_rate}%</span>
               <span> · </span>
-              <span>Avg. finish: {tier.avg_finish?.toFixed(1) || 'N/A'}</span>
+              <span>Avg. finish: {tier.avg_finish != null ? tier.avg_finish.toFixed(1) : 'N/A'}</span>
             </div>
           </div>
         </div>

@@ -76,7 +76,8 @@ jobs:
 
   analytics-api-test:
     name: Analytics API - Test
-    needs: analytics-api-lint
+    needs: [ detect-changes, analytics-api-lint ]
+    if: needs.detect-changes.outputs.analytics-api == 'true'
     uses: ./.github/workflows/test-python.yml
     with:
       working-directory: './analytics-api'
@@ -91,7 +92,8 @@ jobs:
 
   frontend-test:
     name: Frontend - Test
-    needs: frontend-lint
+    needs: [ detect-changes, frontend-lint ]
+    if: needs.detect-changes.outputs.frontend == 'true'
     uses: ./.github/workflows/test-typescript.yml
     with:
       working-directory: './frontend'
@@ -128,11 +130,17 @@ jobs:
           echo "Nginx: ${{ needs.nginx-lint.result }}"
 
           if [ "${{ needs.analytics-api-lint.result }}" == "failure" ] || \
+             [ "${{ needs.analytics-api-lint.result }}" == "cancelled" ] || \
              [ "${{ needs.analytics-api-test.result }}" == "failure" ] || \
+             [ "${{ needs.analytics-api-test.result }}" == "cancelled" ] || \
              [ "${{ needs.frontend-lint.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-lint.result }}" == "cancelled" ] || \
              [ "${{ needs.frontend-test.result }}" == "failure" ] || \
+             [ "${{ needs.frontend-test.result }}" == "cancelled" ] || \
              [ "${{ needs.data-sync-verify.result }}" == "failure" ] || \
-             [ "${{ needs.nginx-lint.result }}" == "failure" ]; then
+             [ "${{ needs.data-sync-verify.result }}" == "cancelled" ] || \
+             [ "${{ needs.nginx-lint.result }}" == "failure" ] || \
+             [ "${{ needs.nginx-lint.result }}" == "cancelled" ]; then
             echo "❌ Some checks failed"
             exit 1
           fi

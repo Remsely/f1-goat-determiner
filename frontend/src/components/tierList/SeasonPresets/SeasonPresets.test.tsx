@@ -22,7 +22,7 @@ describe('SeasonPresets', () => {
     expect(screen.getByText('2010s')).toBeInTheDocument();
     expect(screen.getByText('1950s')).toBeInTheDocument();
     expect(screen.getByText('Select Seasons...')).toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(13);
+    expect(screen.getAllByRole('button')).toHaveLength(13); // 12 preset buttons + 1 "Select Seasons..." custom button
   });
 
   it('"All Seasons" calls onPresetSelect with empty array', async () => {

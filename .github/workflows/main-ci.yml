@@ -82,7 +82,8 @@ jobs:
 
   analytics-api-test:
     name: Analytics API - Test
-    needs: analytics-api-lint
+    needs: [ detect-changes, analytics-api-lint ]
+    if: needs.detect-changes.outputs.analytics-api == 'true'
     uses: ./.github/workflows/test-python.yml
     with:
       working-directory: './analytics-api'
@@ -126,7 +127,8 @@ jobs:
 
   frontend-test:
     name: Frontend - Test
-    needs: frontend-lint
+    needs: [ detect-changes, frontend-lint ]
+    if: needs.detect-changes.outputs.frontend == 'true'
     uses: ./.github/workflows/test-typescript.yml
     with:
       working-directory: './frontend'
@@ -171,6 +173,7 @@ jobs:
   data-sync-build:
     name: Data Sync - Build & Push
     needs: data-sync-verify
+    # Disabled: Dockerfile not yet available for data-sync-svc. Re-enable once image build is set up.
     if: false
     runs-on: ubuntu-latest
     steps:

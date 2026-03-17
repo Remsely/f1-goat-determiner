@@ -2,7 +2,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
 import { useTierList } from './useTierList';
-import { createSeasonsResponse, createTierListResponse } from '@/test/fixtures';
+import { createTierListResponse } from '@/test/fixtures';
 
 describe('useTierList', () => {
   it('loads available seasons on mount', async () => {
@@ -48,7 +48,7 @@ describe('useTierList', () => {
     });
 
     await waitFor(() => {
-      expect(callCount).toBeGreaterThan(initialCount);
+      expect(callCount).toBe(initialCount + 1);
     });
   });
 
@@ -74,7 +74,7 @@ describe('useTierList', () => {
     });
 
     await waitFor(() => {
-      expect(callCount).toBeGreaterThan(initialCount);
+      expect(callCount).toBe(initialCount + 1);
     });
   });
 
@@ -100,8 +100,23 @@ describe('useTierList', () => {
     });
 
     await waitFor(() => {
-      expect(callCount).toBeGreaterThan(initialCount);
+      expect(callCount).toBe(initialCount + 1);
     });
+  });
+
+  it('sets error when seasons API returns 500', async () => {
+    server.use(
+      http.get('*/seasons', () => {
+        return HttpResponse.json({ detail: 'Seasons unavailable' }, { status: 500 });
+      })
+    );
+
+    const { result } = renderHook(() => useTierList());
+
+    await waitFor(() => {
+      expect(result.current.error).not.toBeNull();
+    });
+    expect(result.current.error).toBe('Failed to load available seasons');
   });
 
   it('sets error when API returns 500', async () => {
@@ -166,17 +181,11 @@ describe('useTierList', () => {
     });
 
     await waitFor(() => {
-      expect(callCount).toBeGreaterThan(countBefore);
+      expect(callCount).toBe(countBefore + 1);
     });
   });
 
   it('accepts initialNTiers and initialMinRaces via options', async () => {
-    server.use(
-      http.get('*/seasons', () => {
-        return HttpResponse.json(createSeasonsResponse());
-      })
-    );
-
     const { result } = renderHook(() => useTierList({ initialNTiers: 6, initialMinRaces: 50 }));
 
     expect(result.current.nTiers).toBe(6);
