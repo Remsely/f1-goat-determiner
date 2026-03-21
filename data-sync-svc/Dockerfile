@@ -2,7 +2,7 @@ FROM gradle:9.3.0-jdk21-alpine AS builder
 
 WORKDIR /app
 
-COPY settings.gradle.kts build.gradle.kts ./
+COPY settings.gradle.kts build.gradle.kts gradle.properties ./
 COPY gradle/ gradle/
 COPY build-logic/ build-logic/
 COPY app/ app/
@@ -19,7 +19,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/app/build/libs/*.jar app.jar
+COPY --from=builder /app/app/build/libs/app-*.jar app.jar
 
 EXPOSE 8080
 
