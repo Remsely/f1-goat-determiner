@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-sync-svc
+  labels:
+    app: data-sync-svc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-sync-svc
+  template:
+    metadata:
+      labels:
+        app: data-sync-svc
+    spec:
+      containers:
+        - name: data-sync-svc
+          image: remsely/f1-goat-determiner-data-sync-svc:latest
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: POSTGRES_DB
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/$(DB_NAME)"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
