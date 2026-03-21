@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: test
+
+resources:
+  - ../../base
+
+patches:
+  - path: ingress-patch.yaml
+
+replicas:
+  - name: analytics-api
+    count: 1
+
+images:
+  - name: remsely/f1-goat-determiner-analytics-api
+    newName: remsely/f1-goat-determiner-analytics-api-test
+    newTag: latest
+  - name: remsely/f1-goat-determiner-web
+    newName: remsely/f1-goat-determiner-web-test
+    newTag: latest
+  - name: remsely/f1-goat-determiner-data-sync-svc
+    newName: remsely/f1-goat-determiner-data-sync-svc-test
+    newTag: latest

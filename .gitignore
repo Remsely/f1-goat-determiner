@@ -79,3 +79,6 @@ frontend/tsconfig.tsbuildinfo
 .claude/tmp/
 .claude/settings.local.json
 .playwright-mcp/
+
+# k8s
+k8s/**/secret*.yaml

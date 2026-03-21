@@ -10,9 +10,12 @@
 | Домен (prod)        | `f1goatdeterminer.mooo.com` (freedns.afraid.org) |
 | Домен (test)        | `test.f1goatdeterminer.mooo.com`                 |
 | Docker Hub username | `remsely`                                        |
-| Образ web           | `remsely/f1-goat-determiner-web`                 |
-| Образ analytics-api | `remsely/f1-goat-determiner-analytics-api`       |
-| Образ data-sync-svc | `remsely/f1-goat-determiner-data-sync-svc`       |
+| Образ web (prod)    | `remsely/f1-goat-determiner-web`                 |
+| Образ web (test)    | `remsely/f1-goat-determiner-web-test`            |
+| Образ analytics-api (prod) | `remsely/f1-goat-determiner-analytics-api` |
+| Образ analytics-api (test) | `remsely/f1-goat-determiner-analytics-api-test` |
+| Образ data-sync-svc (prod) | `remsely/f1-goat-determiner-data-sync-svc` |
+| Образ data-sync-svc (test) | `remsely/f1-goat-determiner-data-sync-svc-test` |
 | JDK                 | 21 (eclipse-temurin)                             |
 | PostgreSQL          | 18.2-alpine                                      |
 | Кластер             | k3s, 2 ноды (server + agent)                     |
@@ -230,7 +233,20 @@ k8s/
 - Namespace-ы `prod` и `test` созданы
 - Secret-ы `db-credentials` и ConfigMap-ы `db-config` созданы в обоих namespace-ах
 
-### 3.1. deploy-prod job в main-ci.yml
+### 3.1. Тестовые образы — отдельные репозитории на Docker Hub
+
+Тестовые образы публикуются в отдельные Docker Hub репозитории с суффиксом `-test`,
+чтобы не засорять историю продовых образов:
+
+| Prod                                       | Test                                            |
+|--------------------------------------------|-------------------------------------------------|
+| `remsely/f1-goat-determiner-web`           | `remsely/f1-goat-determiner-web-test`           |
+| `remsely/f1-goat-determiner-analytics-api` | `remsely/f1-goat-determiner-analytics-api-test` |
+| `remsely/f1-goat-determiner-data-sync-svc` | `remsely/f1-goat-determiner-data-sync-svc-test` |
+
+Test overlay (`k8s/overlays/test/kustomization.yaml`) должен ссылаться на `*-test` образы.
+
+### 3.2. deploy-prod job в main-ci.yml
 
 - [ ] Добавить job `deploy-prod`:
     - `needs: [analytics-api-build, web-build, data-sync-build]`
@@ -242,14 +258,18 @@ k8s/
     - `kubectl apply -k k8s/overlays/prod`
     - `kubectl rollout status` для analytics-api, web, data-sync-svc (timeout 120s)
 
-### 3.2. deploy-test job
+### 3.3. deploy-test job
 
 - [ ] Добавить job `deploy-test`:
     - `environment: test` — ждёт ручного approve (required reviewers)
-    - Аналогичная логика, но `k8s/overlays/test`
-    - `kubectl rollout status` с namespace `test`
+    - Шаги:
+        1. **Собрать и запушить тестовые образы** — аналогично prod build jobs, но
+           теги: `*-test:latest` и `*-test:${{ github.sha }}`
+        2. **Деплой** — `kustomize edit set image` с тестовыми образами,
+           `kubectl apply -k k8s/overlays/test`
+        3. **Проверка** — `kubectl rollout status` с namespace `test` (timeout 120s)
 
-### 3.3. GitHub Secrets
+### 3.4. GitHub Secrets
 
 Убедиться, что настроены:
 
@@ -259,16 +279,16 @@ k8s/
 | `DOCKERHUB_USERNAME` | Уже есть                                                |
 | `DOCKERHUB_TOKEN`    | Уже есть                                                |
 
-### 3.4. GitHub Environment
+### 3.5. GitHub Environment
 
 - [ ] Settings -> Environments -> создать `test` с Required reviewers (указать себя)
 
-### 3.5. Проверка
+### 3.6. Проверка
 
 - [ ] Push в main -> образы собираются -> deploy-prod запускается -> Pod-ы обновляются
-- [ ] В PR -> deploy-test ждёт approve -> нажали Approve -> деплой на test
+- [ ] В PR -> deploy-test ждёт approve -> собирает `*-test` образы -> деплой на test
 - [ ] `kubectl get pods -n prod -o wide` — analytics-api на разных нодах
-- [ ] `kubectl get pods -n test` — всё работает
+- [ ] `kubectl get pods -n test` — всё работает, образы с суффиксом `-test`
 
 ---
 
