@@ -46,6 +46,7 @@ jobs:
               - 'frontend/tsconfig*.json'
               - 'frontend/Dockerfile'
               - 'nginx/**'
+              - '.dockerignore'
               - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
@@ -158,7 +159,7 @@ jobs:
 
   web-build:
     name: Web - Build & Push
-    needs: [ frontend-build-check, nginx-lint ]
+    needs: [ detect-changes, frontend-build-check, nginx-lint ]
     if: |
       always() &&
       (needs.frontend-build-check.result == 'success' || needs.frontend-build-check.result == 'skipped') &&

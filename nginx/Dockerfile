@@ -1,11 +1,9 @@
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
-
-RUN npm install -g bun
 
 COPY frontend/package.json frontend/bun.lock ./
 
