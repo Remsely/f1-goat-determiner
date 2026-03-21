@@ -19,8 +19,8 @@ services:
       - f1-network
 
   analytics-api:
-    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-analytics-api:latest
-    container_name: f1-goat-analytics-api
+    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-analytics-api:latest
+    container_name: f1-goat-determiner-analytics-api
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=postgres
@@ -35,31 +35,33 @@ services:
     networks:
       - f1-network
 
-  frontend:
-    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-frontend:latest
-    container_name: f1-goat-frontend
-    volumes:
-      - frontend-static:/static
+  web:
+    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-web:latest
+    container_name: f1-goat-determiner-web
+    ports:
+      - "80:80"
+    depends_on:
+      - analytics-api
+    restart: unless-stopped
     networks:
       - f1-network
 
-  nginx:
-    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-nginx:latest
-    container_name: f1-goat-nginx
-    ports:
-      - "80:80"
-    volumes:
-      - frontend-static:/usr/share/nginx/html:ro
+  data-sync-svc:
+    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-data-sync-svc:latest
+    container_name: f1-goat-determiner-data-sync-svc
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-f1_goat_determiner}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-f1user}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     depends_on:
-      - analytics-api
-      - frontend
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - f1-network
 
 volumes:
   postgres_data:
-  frontend-static:
 
 networks:
   f1-network:

@@ -24,7 +24,7 @@ services:
     build:
       context: ./analytics-api
       dockerfile: Dockerfile
-    container_name: f1-goat-analytics-api
+    container_name: f1-goat-determiner-analytics-api
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=postgres
@@ -39,35 +39,37 @@ services:
     networks:
       - f1-network
 
-  frontend:
+  web:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: f1-goat-frontend
-    volumes:
-      - frontend-static:/static
+      context: ./
+      dockerfile: ./nginx/Dockerfile
+    container_name: f1-goat-determiner-web
+    ports:
+      - "80:80"
+    depends_on:
+      - analytics-api
+    restart: unless-stopped
     networks:
       - f1-network
 
-  nginx:
+  data-sync-svc:
     build:
-      context: ./nginx
+      context: ./data-sync-svc
       dockerfile: Dockerfile
-    container_name: f1-goat-nginx
-    ports:
-      - "80:80"
-    volumes:
-      - frontend-static:/usr/share/nginx/html:ro
+    container_name: f1-goat-determiner-data-sync-svc
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/f1_goat_determiner
+      - SPRING_DATASOURCE_USERNAME=f1user
+      - SPRING_DATASOURCE_PASSWORD=f1password
     depends_on:
-      - analytics-api
-      - frontend
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - f1-network
 
 volumes:
   postgres_data:
-  frontend-static:
 
 networks:
   f1-network:
