@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:18.2-alpine
-    container_name: f1-goat-determiner-postgres
+    container_name: f1-goat-determiner-postgres-local
     environment:
       POSTGRES_DB: f1_goat_determiner
       POSTGRES_USER: f1user
@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U f1user -d f1_goat_determiner"]
+      test: [ "CMD-SHELL", "pg_isready -U f1user -d f1_goat_determiner" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
     build:
       context: ./analytics-api
       dockerfile: Dockerfile
-    container_name: f1-goat-determiner-analytics-api
+    container_name: f1-goat-determiner-analytics-api-local
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=postgres
@@ -43,7 +43,7 @@ services:
     build:
       context: ./
       dockerfile: ./nginx/Dockerfile
-    container_name: f1-goat-determiner-web
+    container_name: f1-goat-determiner-web-local
     ports:
       - "80:80"
     depends_on:
@@ -56,7 +56,7 @@ services:
     build:
       context: ./data-sync-svc
       dockerfile: Dockerfile
-    container_name: f1-goat-determiner-data-sync-svc
+    container_name: f1-goat-determiner-data-sync-svc-local
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/f1_goat_determiner
       - SPRING_DATASOURCE_USERNAME=f1user
@@ -73,4 +73,4 @@ volumes:
 
 networks:
   f1-network:
-    name: f1-goat-network
+    name: f1-goat-determiner-network-local

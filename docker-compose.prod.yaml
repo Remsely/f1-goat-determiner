@@ -65,4 +65,4 @@ volumes:
 
 networks:
   f1-network:
-    name: f1-goat-network-prod
+    name: f1-goat-determiner-network-prod
