@@ -108,7 +108,6 @@ stage 2 кладёт результат в nginx.
 k8s/
 ├── base/
 │   ├── kustomization.yaml
-│   ├── namespace.yaml
 │   ├── db-config.yaml              # ConfigMap
 │   ├── analytics-api/
 │   │   ├── deployment.yaml
@@ -118,8 +117,8 @@ k8s/
 │   │   ├── service.yaml
 │   │   └── ingress.yaml
 │   ├── postgres/
-│   │   ├── statefulset.yaml        # включает volumeClaimTemplate
-│   │   └── service.yaml
+│   │   ├── statefulset.yaml        # включает volumeClaimTemplates
+│   │   └── service.yaml            # Headless Service (clusterIP: None)
 │   └── data-sync-svc/
 │       └── deployment.yaml
 ├── overlays/
@@ -137,8 +136,8 @@ k8s/
 ### 2.2. base/ — общие манифесты
 
 - [ ] `kustomization.yaml` — оглавление ресурсов
-- [ ] `namespace.yaml` — namespace `f1-goat` (overlay переопределит на `prod`/`test`)
 - [ ] `db-config.yaml` — ConfigMap с `POSTGRES_DB: f1_goat_determiner`
+- Namespace'ы создаются отдельно через `kubectl create namespace` (не через base)
 
 ### 2.3. PostgreSQL (StatefulSet)
 
@@ -147,9 +146,9 @@ k8s/
     - Env из ConfigMap (`POSTGRES_DB`) и Secret (`POSTGRES_USER`, `POSTGRES_PASSWORD`)
     - `POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"`
     - `volumeClaimTemplates`: 2Gi, `ReadWriteOnce`
-    - `readinessProbe`: `pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB)`
+    - `readinessProbe` (exec): `["/bin/sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]`
     - Resources: requests 256Mi/100m, limits 512Mi/500m
-- [ ] `postgres/service.yaml`: ClusterIP, порт 5432
+- [ ] `postgres/service.yaml`: Headless Service (`clusterIP: None`), порт 5432
 
 ### 2.4. analytics-api (Deployment + Service)
 
@@ -180,7 +179,7 @@ k8s/
     - 1 реплика (ShedLock — не нужно масштабирование)
     - Env: `SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/$(DB_NAME)`,
       `SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD` из Secret
-    - `readinessProbe`/`livenessProbe`: HTTP GET `/actuator/health` на порт 8080
+    - `readinessProbe`/`livenessProbe`: TCP socket на порт 8080 (Actuator не подключен)
     - Resources: requests 256Mi/100m, limits 512Mi/500m
     - **Без Service** — к нему никто не обращается извне
 
@@ -237,6 +236,7 @@ k8s/
     - `needs: [analytics-api-build, web-build, data-sync-build]`
     - Условие: все build-jobs прошли (или были skipped — detect-changes)
     - `azure/setup-kubectl@v4`
+    - `imranismail/setup-kustomize@v2` — установка kustomize CLI
     - Kubeconfig из `secrets.KUBE_CONFIG` (base64-encoded)
     - `kustomize edit set image` — подставить `${{ github.sha }}` теги для всех образов
     - `kubectl apply -k k8s/overlays/prod`

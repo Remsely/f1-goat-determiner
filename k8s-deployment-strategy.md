@@ -25,11 +25,10 @@
 
 | Сервис            | Стек                             | Роль                                             | Docker-образ                                            |
 |-------------------|----------------------------------|--------------------------------------------------|---------------------------------------------------------|
-| **analytics-api** | Python FastAPI, psycopg2, pandas | REST API — тир-листы, кластеризация              | `remsely/f1-goat-analytics-api`                         |
-| **frontend**      | React, Vite, bun                 | SPA-интерфейс                                    | `remsely/f1-goat-frontend` (init-контейнер со статикой) |
-| **nginx**         | Nginx Alpine                     | Reverse proxy + раздача статики                  | `remsely/f1-goat-nginx`                                 |
-| **PostgreSQL**    | PostgreSQL 18.2 Alpine           | Хранение F1-данных                               | Стандартный образ `postgres:18.2-alpine`                |
-| **data-sync-svc** | Kotlin Spring Boot               | Синхронизация данных из Jolpica API → PostgreSQL | `remsely/f1-goat-data-sync-svc` (нужен Dockerfile)      |
+| **analytics-api** | Python FastAPI, psycopg2, pandas | REST API — тир-листы, кластеризация              | `remsely/f1-goat-determiner-analytics-api`                         |
+| **web**           | React + Nginx Alpine             | SPA-интерфейс + reverse proxy + раздача статики  | `remsely/f1-goat-determiner-web` (объединённый образ)              |
+| **PostgreSQL**    | PostgreSQL 18.2 Alpine           | Хранение F1-данных                               | Стандартный образ `postgres:18.2-alpine`                           |
+| **data-sync-svc** | Kotlin Spring Boot               | Синхронизация данных из Jolpica API → PostgreSQL | `remsely/f1-goat-determiner-data-sync-svc` (нужен Dockerfile)      |
 
 ### Текущий Docker Compose стек
 
@@ -226,11 +225,10 @@ build: stage 1 собирает React, stage 2 кладёт результат �
 
 ```dockerfile
 # === Stage 1: Build frontend ===
-FROM node:20-alpine AS builder
+FROM oven/bun:alpine AS builder
 WORKDIR /app
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
-RUN npm install -g bun
 COPY frontend/package.json frontend/bun.lock ./
 RUN bun install --frozen-lockfile
 COPY frontend/ .
@@ -282,7 +280,7 @@ nginx/*.md
   Frontend собирается внутри nginx-образа.
 - Job `nginx-build` — заменяется на `web-build` с другим контекстом и тегами.
 - Docker-образ `f1-goat-frontend` на DockerHub — перестаёт обновляться.
-- Docker-образ `f1-goat-nginx` — переименовывается в `f1-goat-web`.
+- Docker-образ `f1-goat-nginx` — переименовывается в `f1-goat-determiner-web`.
 
 #### Что остаётся без изменений
 
@@ -310,8 +308,8 @@ nginx/*.md
                   file: ./nginx/Dockerfile          # ← Dockerfile внутри nginx/
                   push: true
                   tags: |
-                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-web:latest
-                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-web:${{ github.sha }}
+                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-web:latest
+                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-web:${{ github.sha }}
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 ```
@@ -347,8 +345,8 @@ services:
     # ... без изменений ...
 
     web: # ← было nginx + frontend
-        image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-web:latest
-        container_name: f1-goat-web
+        image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-web:latest
+        container_name: f1-goat-determiner-web
         ports:
             - "80:80"
         depends_on:
@@ -376,9 +374,9 @@ Vite (`bun run dev`). Объединённый образ используетс
 
 | Образ                           | Содержимое                          | Dockerfile                                 |
 |---------------------------------|-------------------------------------|--------------------------------------------|
-| `remsely/f1-goat-web`           | nginx + React static + proxy config | `nginx/Dockerfile` (context: root)         |
-| `remsely/f1-goat-analytics-api` | FastAPI + psycopg2                  | `analytics-api/Dockerfile` (без изменений) |
-| `remsely/f1-goat-data-sync-svc` | Spring Boot + Flyway                | `data-sync-svc/Dockerfile` (создать)       |
+| `remsely/f1-goat-determiner-web`           | nginx + React static + proxy config | `nginx/Dockerfile` (context: root)         |
+| `remsely/f1-goat-determiner-analytics-api` | FastAPI + psycopg2                  | `analytics-api/Dockerfile` (без изменений) |
+| `remsely/f1-goat-determiner-data-sync-svc` | Spring Boot + Flyway                | `data-sync-svc/Dockerfile` (создать)       |
 | `postgres:18.2-alpine`          | Стандартный образ PostgreSQL        | —                                          |
 
 ### Задачи
@@ -391,7 +389,7 @@ Vite (`bun run dev`). Объединённый образ используетс
     - [ ] Убрать job `nginx-build`
     - [ ] Добавить фильтр `web` в detect-changes
 - [ ] Обновить `docker-compose.prod.yaml` (убрать frontend, nginx → web)
-- [ ] Собрать образ локально и проверить: `docker build -f nginx/Dockerfile -t f1-goat-web:dev .`
+- [ ] Собрать образ локально и проверить: `docker build -f nginx/Dockerfile -t f1-goat-determiner-web:dev .`
 - [ ] Создать `data-sync-svc/Dockerfile` (JDK multi-stage build)
 
 ---
@@ -465,15 +463,15 @@ eval $(minikube docker-env)   # Linux/Mac
 minikube docker-env | Invoke-Expression   # PowerShell
 
 # Теперь docker build будет собирать образы ВНУТРИ minikube
-docker build -f nginx/Dockerfile -t remsely/f1-goat-web:dev .
-docker build -t remsely/f1-goat-analytics-api:dev ./analytics-api
+docker build -f nginx/Dockerfile -t remsely/f1-goat-determiner-web:dev .
+docker build -t remsely/f1-goat-determiner-analytics-api:dev ./analytics-api
 
 # В манифестах ставим imagePullPolicy: Never
 ```
 
 ```bash
 # Вариант 2: загрузить готовый образ в minikube
-minikube image load remsely/f1-goat-web:dev
+minikube image load remsely/f1-goat-determiner-web:dev
 ```
 
 ### Задачи
@@ -493,7 +491,6 @@ minikube image load remsely/f1-goat-web:dev
 k8s/
 ├── base/                          # Общие манифесты (без привязки к окружению)
 │   ├── kustomization.yaml
-│   ├── namespace.yaml
 │   │
 │   ├── analytics-api/
 │   │   ├── deployment.yaml
@@ -505,9 +502,8 @@ k8s/
 │   │   └── ingress.yaml
 │   │
 │   ├── postgres/
-│   │   ├── statefulset.yaml
-│   │   ├── service.yaml
-│   │   └── pvc.yaml
+│   │   ├── statefulset.yaml       # включает volumeClaimTemplates
+│   │   └── service.yaml
 │   │
 │   └── data-sync-svc/
 │       └── deployment.yaml
@@ -535,10 +531,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-    - namespace.yaml
     - postgres/statefulset.yaml
     - postgres/service.yaml
-    - postgres/pvc.yaml
     - analytics-api/deployment.yaml
     - analytics-api/service.yaml
     - web/deployment.yaml
@@ -547,14 +541,9 @@ resources:
     - data-sync-svc/deployment.yaml
 ```
 
-### base/namespace.yaml
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-    name: f1-goat    # overlay переопределит на prod / test
-```
+Namespace'ы (`prod`, `test`) создаются отдельно через `kubectl create namespace`,
+а не через base-манифест. Kustomize `namespace:` в overlay назначает namespace
+ресурсам, но не переименовывает объект Namespace.
 
 ### base/analytics-api/deployment.yaml
 
@@ -577,7 +566,7 @@ spec:
         spec:
             containers:
                 -   name: analytics-api
-                    image: remsely/f1-goat-analytics-api:latest
+                    image: remsely/f1-goat-determiner-analytics-api:latest
                     ports:
                         -   containerPort: 8000
                     env:
@@ -660,7 +649,7 @@ spec:
         spec:
             containers:
                 -   name: web
-                    image: remsely/f1-goat-web:latest
+                    image: remsely/f1-goat-determiner-web:latest
                     ports:
                         -   containerPort: 80
                     resources:
@@ -721,25 +710,16 @@ spec:
                                     number: 80
 ```
 
-### Важно: nginx.conf для Kubernetes
+### nginx.conf — без изменений
 
-В текущем nginx.conf `proxy_pass` смотрит на `http://backend:8000`.
-В Kubernetes DNS-имя сервиса будет `analytics-api` (имя из Service).
-Нужно обновить:
-
-```nginx
-location /api/ {
-    rewrite ^/api/(.*) /$1 break;
-    proxy_pass http://analytics-api:8000;    # ← изменить hostname
-}
-```
+Текущий `nginx.conf` уже использует `proxy_pass http://analytics-api:8000` —
+это совпадает с именем Service в Kubernetes. Менять ничего не нужно.
 
 ### Задачи
 
 - [ ] Создать структуру `k8s/base/`
 - [ ] Написать Deployment + Service для analytics-api
 - [ ] Написать Deployment + Service + Ingress для web
-- [ ] Обновить `nginx.conf`: `backend` → `analytics-api`
 - [ ] Проверить в minikube: `kubectl apply -k k8s/base/`
 - [ ] Port-forward и проверить работу: `kubectl port-forward svc/web 8080:80`
 
@@ -767,7 +747,7 @@ metadata:
     labels:
         app: postgres
 spec:
-    serviceName: postgres           # связь с Headless Service
+    serviceName: postgres           # связь с Headless Service (clusterIP: None)
     replicas: 1                     # одна реплика — для pet-project достаточно
     selector:
         matchLabels:
@@ -813,11 +793,9 @@ spec:
                     readinessProbe:
                         exec:
                             command:
-                                - pg_isready
-                                - -U
-                                - f1user                    # будет переопределено через env
-                                - -d
-                                - f1_goat_determiner
+                                - sh
+                                - -c
+                                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
                         initialDelaySeconds: 5
                         periodSeconds: 10
     volumeClaimTemplates: # ← StatefulSet автоматически создаёт PVC
@@ -832,6 +810,10 @@ spec:
 
 ### base/postgres/service.yaml
 
+StatefulSet требует Headless Service (`clusterIP: None`) для стабильных
+DNS-имён Pod'ов (`postgres-0.postgres.namespace.svc.cluster.local`).
+Другие сервисы обращаются по имени `postgres` — DNS резолвится в IP Pod'а.
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -839,6 +821,7 @@ metadata:
     name: postgres
 spec:
     type: ClusterIP
+    clusterIP: None                 # Headless Service для StatefulSet
     selector:
         app: postgres
     ports:
@@ -1149,6 +1132,9 @@ detect-changes → lint → test → build & push images
           -   name: Set up kubectl
               uses: azure/setup-kubectl@v4
 
+          -   name: Set up Kustomize
+              uses: imranismail/setup-kustomize@v2
+
           -   name: Configure kubeconfig
               run: |
                   mkdir -p ~/.kube
@@ -1158,9 +1144,9 @@ detect-changes → lint → test → build & push images
               run: |
                   cd k8s/overlays/prod
                   kustomize edit set image \
-                    remsely/f1-goat-analytics-api=remsely/f1-goat-analytics-api:${{ github.sha }} \
-                    remsely/f1-goat-web=remsely/f1-goat-web:${{ github.sha }} \
-                    remsely/f1-goat-data-sync-svc=remsely/f1-goat-data-sync-svc:${{ github.sha }}
+                    remsely/f1-goat-determiner-analytics-api=remsely/f1-goat-determiner-analytics-api:${{ github.sha }} \
+                    remsely/f1-goat-determiner-web=remsely/f1-goat-determiner-web:${{ github.sha }} \
+                    remsely/f1-goat-determiner-data-sync-svc=remsely/f1-goat-determiner-data-sync-svc:${{ github.sha }}
                   kubectl apply -k .
 
           -   name: Wait for rollout
@@ -1202,6 +1188,9 @@ detect-changes → lint → test → build & push images
           -   name: Set up kubectl
               uses: azure/setup-kubectl@v4
 
+          -   name: Set up Kustomize
+              uses: imranismail/setup-kustomize@v2
+
           -   name: Configure kubeconfig
               run: |
                   mkdir -p ~/.kube
@@ -1211,9 +1200,9 @@ detect-changes → lint → test → build & push images
               run: |
                   cd k8s/overlays/test
                   kustomize edit set image \
-                    remsely/f1-goat-analytics-api=remsely/f1-goat-analytics-api:${{ github.sha }} \
-                    remsely/f1-goat-web=remsely/f1-goat-web:${{ github.sha }} \
-                    remsely/f1-goat-data-sync-svc=remsely/f1-goat-data-sync-svc:${{ github.sha }}
+                    remsely/f1-goat-determiner-analytics-api=remsely/f1-goat-determiner-analytics-api:${{ github.sha }} \
+                    remsely/f1-goat-determiner-web=remsely/f1-goat-determiner-web:${{ github.sha }} \
+                    remsely/f1-goat-determiner-data-sync-svc=remsely/f1-goat-determiner-data-sync-svc:${{ github.sha }}
                   kubectl apply -k .
 
           -   name: Wait for rollout
@@ -1272,11 +1261,11 @@ replicas:
         count: 2                       # 2 реплики в проде
 
 images:
-    -   name: remsely/f1-goat-analytics-api
+    -   name: remsely/f1-goat-determiner-analytics-api
         newTag: latest                 # CI заменит на конкретный SHA
-    -   name: remsely/f1-goat-web
+    -   name: remsely/f1-goat-determiner-web
         newTag: latest
-    -   name: remsely/f1-goat-data-sync-svc
+    -   name: remsely/f1-goat-determiner-data-sync-svc
         newTag: latest
 ```
 
@@ -1324,11 +1313,11 @@ replicas:
         count: 1                       # 1 реплика на тесте
 
 images:
-    -   name: remsely/f1-goat-analytics-api
+    -   name: remsely/f1-goat-determiner-analytics-api
         newTag: latest
-    -   name: remsely/f1-goat-web
+    -   name: remsely/f1-goat-determiner-web
         newTag: latest
-    -   name: remsely/f1-goat-data-sync-svc
+    -   name: remsely/f1-goat-determiner-data-sync-svc
         newTag: latest
 ```
 
@@ -1393,12 +1382,12 @@ Flyway накатывает миграции, затем ShedLock запуска
 Нужно создать Dockerfile:
 
 ```dockerfile
-FROM eclipse-temurin:25-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN ./gradlew :app:bootJar --no-daemon
 
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/app/build/libs/*.jar app.jar
 EXPOSE 8080
@@ -1428,7 +1417,7 @@ spec:
         spec:
             containers:
                 -   name: data-sync-svc
-                    image: remsely/f1-goat-data-sync-svc:latest
+                    image: remsely/f1-goat-determiner-data-sync-svc:latest
                     env:
                         -   name: SPRING_DATASOURCE_URL
                             value: jdbc:postgresql://postgres:5432/f1_goat_determiner
@@ -1450,14 +1439,12 @@ spec:
                             memory: "512Mi"
                             cpu: "500m"
                     readinessProbe:
-                        httpGet:
-                            path: /actuator/health
+                        tcpSocket:
                             port: 8080
                         initialDelaySeconds: 15
                         periodSeconds: 10
                     livenessProbe:
-                        httpGet:
-                            path: /actuator/health
+                        tcpSocket:
                             port: 8080
                         initialDelaySeconds: 30
                         periodSeconds: 30
@@ -1519,8 +1506,8 @@ kubectl exec -it postgres-0 -n prod -- \
                   context: ./data-sync-svc
                   push: true
                   tags: |
-                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-data-sync-svc:latest
-                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-data-sync-svc:${{ github.sha }}
+                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-data-sync-svc:latest
+                      ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-data-sync-svc:${{ github.sha }}
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 ```
@@ -1556,9 +1543,9 @@ resources:
 
 ### Образы
 
-- [ ] `f1-goat-web` (объединённый nginx + frontend) собирается и пушится
-- [ ] `f1-goat-analytics-api` собирается и пушится
-- [ ] `f1-goat-data-sync-svc` собирается и пушится
+- [ ] `f1-goat-determiner-web` (объединённый nginx + frontend) собирается и пушится
+- [ ] `f1-goat-determiner-analytics-api` собирается и пушится
+- [ ] `f1-goat-determiner-data-sync-svc` собирается и пушится
 - [ ] CI обновлён под новую структуру образов
 
 ### Kubernetes-манифесты
