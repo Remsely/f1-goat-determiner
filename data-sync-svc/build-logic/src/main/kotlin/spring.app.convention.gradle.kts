@@ -8,7 +8,7 @@ plugins {
 apply(plugin = libs.plugins.spring.boot.get().pluginId)
 
 tasks.withType<BootJar> {
-    mainClass.set("dev.remsely.f1goatdeterminer.datasync.app.DataSyncApplication")
+    mainClass.set("dev.remsely.f1goatdeterminer.datasync.app.DataSyncApplicationKt")
 }
 
 tasks.named<Jar>("jar") {
