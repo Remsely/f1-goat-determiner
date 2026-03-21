@@ -18,8 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       analytics-api: ${{ steps.filter.outputs.analytics-api }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+      web: ${{ steps.filter.outputs.web }}
       data-sync-svc: ${{ steps.filter.outputs.data-sync-svc }}
+      frontend: ${{ steps.filter.outputs.frontend }}
       nginx: ${{ steps.filter.outputs.nginx }}
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +38,15 @@ jobs:
               - '.github/workflows/lint-python.yml'
               - '.github/workflows/test-python.yml'
               - '.github/workflows/main-ci.yml'
+            web:
+              - 'frontend/src/**'
+              - 'frontend/package.json'
+              - 'frontend/bun.lock'
+              - 'frontend/vite.config.ts'
+              - 'frontend/tsconfig*.json'
+              - 'frontend/Dockerfile'
+              - 'nginx/**'
+              - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
               - 'frontend/package.json'
@@ -45,7 +55,6 @@ jobs:
               - 'frontend/tsconfig*.json'
               - 'frontend/eslint.config.js'
               - 'frontend/.prettierrc.json'
-              - 'frontend/Dockerfile'
               - '.github/workflows/lint-typescript.yml'
               - '.github/workflows/test-typescript.yml'
               - '.github/workflows/build-typescript.yml'
@@ -111,12 +120,12 @@ jobs:
           file: ./analytics-api/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-analytics-api:latest
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-analytics-api:${{ github.sha }}
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-analytics-api:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-analytics-api:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # === FRONTEND ===
+  # === WEB (frontend + nginx) ===
   frontend-lint:
     name: Frontend - Lint
     needs: detect-changes
@@ -139,9 +148,22 @@ jobs:
     with:
       working-directory: './frontend'
 
-  frontend-build:
-    name: Frontend - Build & Push
-    needs: frontend-build-check
+  nginx-lint:
+    name: Nginx - Lint
+    needs: detect-changes
+    if: needs.detect-changes.outputs.nginx == 'true'
+    uses: ./.github/workflows/lint-nginx.yml
+    with:
+      working-directory: './nginx'
+
+  web-build:
+    name: Web - Build & Push
+    needs: [ frontend-build-check, nginx-lint ]
+    if: |
+      always() &&
+      (needs.frontend-build-check.result == 'success' || needs.frontend-build-check.result == 'skipped') &&
+      (needs.nginx-lint.result == 'success' || needs.nginx-lint.result == 'skipped') &&
+      needs.detect-changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,12 +180,12 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
+          context: ./
+          file: ./nginx/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-frontend:latest
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-frontend:${{ github.sha }}
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-web:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-web:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -179,8 +201,6 @@ jobs:
   data-sync-build:
     name: Data Sync - Build & Push
     needs: data-sync-verify
-    # Disabled: Dockerfile not yet available for data-sync-svc. Re-enable once image build is set up.
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -201,44 +221,7 @@ jobs:
           file: ./data-sync-svc/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-data-sync-svc:latest
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-data-sync-svc:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # === NGINX ===
-  nginx-lint:
-    name: Nginx - Lint
-    needs: detect-changes
-    if: needs.detect-changes.outputs.nginx == 'true'
-    uses: ./.github/workflows/lint-nginx.yml
-    with:
-      working-directory: './nginx'
-
-  nginx-build:
-    name: Nginx - Build & Push
-    needs: nginx-lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: ./nginx
-          file: ./nginx/Dockerfile
-          push: true
-          tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-nginx:latest
-            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-nginx:${{ github.sha }}
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-data-sync-svc:latest
+            ${{ env.DOCKERHUB_USERNAME }}/f1-goat-determiner-data-sync-svc:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
