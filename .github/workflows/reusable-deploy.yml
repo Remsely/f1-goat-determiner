@@ -1,0 +1,65 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_call:
+    inputs:
+      overlay:
+        description: "Kustomize overlay (prod or test)"
+        required: true
+        type: string
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        type: string
+    secrets:
+      KUBE_CONFIG:
+        required: true
+      DB_USER:
+        required: true
+      DB_PASSWORD:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Ensure namespace exists
+        run: kubectl create namespace ${{ inputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create or update db-credentials Secret
+        run: |
+          kubectl create secret generic db-credentials \
+            -n ${{ inputs.namespace }} \
+            --from-literal=POSTGRES_USER="${{ secrets.DB_USER }}" \
+            --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply manifests
+        run: kubectl apply -k k8s/overlays/${{ inputs.overlay }}
+
+      - name: Restart deployments
+        run: |
+          kubectl rollout restart deployment/analytics-api -n ${{ inputs.namespace }}
+          kubectl rollout restart deployment/web -n ${{ inputs.namespace }}
+          kubectl rollout restart deployment/data-sync-svc -n ${{ inputs.namespace }}
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/analytics-api -n ${{ inputs.namespace }} --timeout=120s
+          kubectl rollout status deployment/web -n ${{ inputs.namespace }} --timeout=120s
+          kubectl rollout status deployment/data-sync-svc -n ${{ inputs.namespace }} --timeout=120s

@@ -1,0 +1,56 @@
+name: Deploy to Test (PR)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-analytics-api:
+    name: Build analytics-api-test
+    uses: ./.github/workflows/reusable-build-push.yml
+    with:
+      image-name: f1-goat-determiner-analytics-api-test
+      context: ./analytics-api
+      dockerfile: ./analytics-api/Dockerfile
+      tag-suffix: ${{ github.sha }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  build-web:
+    name: Build web-test
+    uses: ./.github/workflows/reusable-build-push.yml
+    with:
+      image-name: f1-goat-determiner-web-test
+      context: ./
+      dockerfile: ./nginx/Dockerfile
+      tag-suffix: ${{ github.sha }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  build-data-sync-svc:
+    name: Build data-sync-svc-test
+    uses: ./.github/workflows/reusable-build-push.yml
+    with:
+      image-name: f1-goat-determiner-data-sync-svc-test
+      context: ./data-sync-svc
+      dockerfile: ./data-sync-svc/Dockerfile
+      tag-suffix: ${{ github.sha }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  deploy:
+    name: Deploy to Test
+    needs: [ build-analytics-api, build-web, build-data-sync-svc ]
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      overlay: test
+      namespace: test
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
