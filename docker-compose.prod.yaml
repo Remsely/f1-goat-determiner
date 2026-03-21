@@ -1,16 +1,16 @@
 services:
   postgres:
     image: postgres:18.2-alpine
-    container_name: f1-goat-determiner-postgres
+    container_name: f1-goat-determiner-postgres-prod
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-f1_goat_determiner}
-      POSTGRES_USER: ${POSTGRES_USER:-f1user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: f1_goat_determiner
+      POSTGRES_USER: f1user
+      POSTGRES_PASSWORD: f1password
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-f1user} -d ${POSTGRES_DB:-f1_goat_determiner}"]
+      test: [ "CMD-SHELL", "pg_isready -U f1user -d f1_goat_determiner" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -19,15 +19,15 @@ services:
       - f1-network
 
   analytics-api:
-    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-analytics-api:latest
-    container_name: f1-goat-determiner-analytics-api
+    image: remsely/f1-goat-determiner-analytics-api:latest
+    container_name: f1-goat-determiner-analytics-api-prod
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${POSTGRES_DB:-f1_goat_determiner}
-      - DB_USER=${POSTGRES_USER:-f1user}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - DB_NAME=f1_goat_determiner
+      - DB_USER=f1user
+      - DB_PASSWORD=f1password
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,8 +36,8 @@ services:
       - f1-network
 
   web:
-    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-web:latest
-    container_name: f1-goat-determiner-web
+    image: remsely/f1-goat-determiner-web:latest
+    container_name: f1-goat-determiner-web-prod
     ports:
       - "80:80"
     depends_on:
@@ -47,12 +47,12 @@ services:
       - f1-network
 
   data-sync-svc:
-    image: ${DOCKERHUB_USERNAME:-remsely}/f1-goat-determiner-data-sync-svc:latest
-    container_name: f1-goat-determiner-data-sync-svc
+    image: remsely/f1-goat-determiner-data-sync-svc:latest
+    container_name: f1-goat-determiner-data-sync-svc-prod
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-f1_goat_determiner}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-f1user}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/f1_goat_determiner
+      - SPRING_DATASOURCE_USERNAME=f1user
+      - SPRING_DATASOURCE_PASSWORD=f1password
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,4 +65,4 @@ volumes:
 
 networks:
   f1-network:
-    name: f1-goat-network
+    name: f1-goat-network-prod

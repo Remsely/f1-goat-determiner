@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       analytics-api: ${{ steps.filter.outputs.analytics-api }}
-      web: ${{ steps.filter.outputs.web }}
       data-sync-svc: ${{ steps.filter.outputs.data-sync-svc }}
       frontend: ${{ steps.filter.outputs.frontend }}
       nginx: ${{ steps.filter.outputs.nginx }}
@@ -37,16 +36,6 @@ jobs:
               - 'analytics-api/Dockerfile'
               - '.github/workflows/lint-python.yml'
               - '.github/workflows/test-python.yml'
-              - '.github/workflows/main-ci.yml'
-            web:
-              - 'frontend/src/**'
-              - 'frontend/package.json'
-              - 'frontend/bun.lock'
-              - 'frontend/vite.config.ts'
-              - 'frontend/tsconfig*.json'
-              - 'frontend/Dockerfile'
-              - 'nginx/**'
-              - '.dockerignore'
               - '.github/workflows/main-ci.yml'
             frontend:
               - 'frontend/src/**'
@@ -79,6 +68,7 @@ jobs:
               - '.github/workflows/main-ci.yml'
             nginx:
               - 'nginx/**'
+              - '.dockerignore'
               - '.github/workflows/lint-nginx.yml'
               - '.github/workflows/main-ci.yml'
 
@@ -159,12 +149,12 @@ jobs:
 
   web-build:
     name: Web - Build & Push
-    needs: [ detect-changes, frontend-build-check, nginx-lint ]
+    needs: [ frontend-build-check, nginx-lint ]
     if: |
       always() &&
-      (needs.frontend-build-check.result == 'success' || needs.frontend-build-check.result == 'skipped') &&
-      (needs.nginx-lint.result == 'success' || needs.nginx-lint.result == 'skipped') &&
-      needs.detect-changes.outputs.web == 'true'
+      (needs.frontend-build-check.result == 'success' || needs.nginx-lint.result == 'success') &&
+      needs.frontend-build-check.result != 'failure' &&
+      needs.nginx-lint.result != 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
