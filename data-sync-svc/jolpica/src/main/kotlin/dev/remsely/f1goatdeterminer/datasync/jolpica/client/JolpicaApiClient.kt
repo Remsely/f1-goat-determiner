@@ -27,51 +27,86 @@ class JolpicaApiClient(
     fun forEachPageOfStatuses(
         startOffset: Int = 0,
         onPage: (items: List<StatusDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.statusTable?.statuses.orEmpty() }, { offset, limit ->
-        api.fetchStatuses(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.statusTable?.statuses.orEmpty() },
+        { offset, limit ->
+            api.fetchStatuses(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfCircuits(
         startOffset: Int = 0,
         onPage: (items: List<CircuitDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.circuitTable?.circuits.orEmpty() }, { offset, limit ->
-        api.fetchCircuits(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.circuitTable?.circuits.orEmpty() },
+        { offset, limit ->
+            api.fetchCircuits(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfConstructors(
         startOffset: Int = 0,
         onPage: (items: List<ConstructorDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.constructorTable?.constructors.orEmpty() }, { offset, limit ->
-        api.fetchConstructors(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.constructorTable?.constructors.orEmpty() },
+        { offset, limit ->
+            api.fetchConstructors(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfDrivers(
         startOffset: Int = 0,
         onPage: (items: List<DriverDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.driverTable?.drivers.orEmpty() }, { offset, limit ->
-        api.fetchDrivers(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.driverTable?.drivers.orEmpty() },
+        { offset, limit ->
+            api.fetchDrivers(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfRaces(
         startOffset: Int = 0,
         onPage: (items: List<RaceDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.raceTable?.races.orEmpty() }, { offset, limit ->
-        api.fetchAllRaces(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.raceTable?.races.orEmpty() },
+        { offset, limit ->
+            api.fetchAllRaces(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfResults(
         startOffset: Int = 0,
         onPage: (items: List<RaceDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.raceTable?.races.orEmpty() }, { offset, limit ->
-        api.fetchAllResults(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.raceTable?.races.orEmpty() },
+        { offset, limit ->
+            api.fetchAllResults(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfQualifying(
         startOffset: Int = 0,
         onPage: (items: List<RaceDto>, pageNumber: Int, totalPages: Int, nextOffset: Int) -> Unit,
-    ): Int = paginateEachPage(startOffset, { it.raceTable?.races.orEmpty() }, { offset, limit ->
-        api.fetchAllQualifying(limit, offset)
-    }, onPage)
+    ): Int = paginateEachPage(
+        startOffset,
+        { it.raceTable?.races.orEmpty() },
+        { offset, limit ->
+            api.fetchAllQualifying(limit, offset)
+        },
+        onPage,
+    )
 
     fun forEachPageOfSeasonDriverStandings(
         season: Int,
@@ -127,7 +162,6 @@ class JolpicaApiClient(
                 "<< API response: offset=${data.offsetInt}, " +
                     "total=$total, returned=${pageItems.size} (call #$apiCalls, ~$totalPages pages)"
             }
-            log.info { "   << $response" }
 
             if (pageItems.isNotEmpty()) {
                 onPage(pageItems, apiCalls, totalPages, nextOffset)
