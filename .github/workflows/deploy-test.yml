@@ -47,57 +47,20 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  deploy-infra:
-    name: Deploy Infra to Test
+  deploy:
+    name: Deploy to Test
     needs: [ build-analytics-api, build-web, build-data-sync-svc ]
-    uses: ./.github/workflows/reusable-deploy-infra.yml
+    uses: ./.github/workflows/reusable-deploy.yml
     with:
       overlay: test
       namespace: test
       apply-manifests: true
+      image-tag: ${{ github.sha }}
+      analytics-api-image: f1-goat-determiner-analytics-api-test
+      web-image: f1-goat-determiner-web-test
+      data-sync-svc-image: f1-goat-determiner-data-sync-svc-test
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
-  deploy-analytics-api:
-    name: Deploy analytics-api to Test
-    needs: [ build-analytics-api, deploy-infra ]
-    uses: ./.github/workflows/reusable-deploy-service.yml
-    with:
-      deployment: analytics-api
-      container: analytics-api
-      image-name: f1-goat-determiner-analytics-api-test
-      image-tag: ${{ github.sha }}
-      namespace: test
-    secrets:
-      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-
-  deploy-web:
-    name: Deploy web to Test
-    needs: [ build-web, deploy-infra ]
-    uses: ./.github/workflows/reusable-deploy-service.yml
-    with:
-      deployment: web
-      container: web
-      image-name: f1-goat-determiner-web-test
-      image-tag: ${{ github.sha }}
-      namespace: test
-    secrets:
-      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-
-  deploy-data-sync-svc:
-    name: Deploy data-sync-svc to Test
-    needs: [ build-data-sync-svc, deploy-infra ]
-    uses: ./.github/workflows/reusable-deploy-service.yml
-    with:
-      deployment: data-sync-svc
-      container: data-sync-svc
-      image-name: f1-goat-determiner-data-sync-svc-test
-      image-tag: ${{ github.sha }}
-      namespace: test
-    secrets:
-      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

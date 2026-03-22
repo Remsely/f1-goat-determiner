@@ -1,0 +1,98 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      overlay:
+        description: "Kustomize overlay (prod or test)"
+        required: true
+        type: string
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        type: string
+      apply-manifests:
+        description: "Whether to run kubectl apply -k (only when k8s configs changed)"
+        required: true
+        type: boolean
+      image-tag:
+        description: "Image tag (e.g. git SHA)"
+        required: true
+        type: string
+      analytics-api-image:
+        description: "Image name for analytics-api (empty = skip)"
+        type: string
+        default: ""
+      web-image:
+        description: "Image name for web (empty = skip)"
+        type: string
+        default: ""
+      data-sync-svc-image:
+        description: "Image name for data-sync-svc (empty = skip)"
+        type: string
+        default: ""
+    secrets:
+      KUBE_CONFIG:
+        description: "Base64-encoded kubeconfig YAML"
+        required: true
+      DOCKERHUB_USERNAME:
+        required: true
+      DB_USER:
+        required: true
+      DB_PASSWORD:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Ensure namespace exists
+        run: kubectl create namespace ${{ inputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create or update db-credentials Secret
+        run: |
+          kubectl create secret generic db-credentials \
+            -n ${{ inputs.namespace }} \
+            --from-literal=POSTGRES_USER="${{ secrets.DB_USER }}" \
+            --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply manifests
+        if: inputs.apply-manifests
+        run: kubectl apply -k k8s/overlays/${{ inputs.overlay }} -n ${{ inputs.namespace }}
+
+      - name: Deploy analytics-api
+        if: inputs.analytics-api-image != ''
+        run: |
+          kubectl set image deployment/analytics-api \
+            analytics-api=${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.analytics-api-image }}:${{ inputs.image-tag }} \
+            -n ${{ inputs.namespace }}
+          kubectl rollout status deployment/analytics-api -n ${{ inputs.namespace }} --timeout=120s
+
+      - name: Deploy web
+        if: inputs.web-image != ''
+        run: |
+          kubectl set image deployment/web \
+            web=${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.web-image }}:${{ inputs.image-tag }} \
+            -n ${{ inputs.namespace }}
+          kubectl rollout status deployment/web -n ${{ inputs.namespace }} --timeout=120s
+
+      - name: Deploy data-sync-svc
+        if: inputs.data-sync-svc-image != ''
+        run: |
+          kubectl set image deployment/data-sync-svc \
+            data-sync-svc=${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.data-sync-svc-image }}:${{ inputs.image-tag }} \
+            -n ${{ inputs.namespace }}
+          kubectl rollout status deployment/data-sync-svc -n ${{ inputs.namespace }} --timeout=120s
