@@ -37,6 +37,7 @@ on:
         default: ""
     secrets:
       KUBE_CONFIG:
+        description: "Base64-encoded kubeconfig YAML"
         required: true
       DOCKERHUB_USERNAME:
         required: true
@@ -101,7 +102,7 @@ jobs:
             remsely/f1-goat-determiner-data-sync-svc=${PREFIX}-data-sync-svc${SUFFIX}:${TAG}
 
       - name: Apply manifests
-        run: kubectl apply -k k8s/overlays/${{ inputs.overlay }}
+        run: kubectl apply -k k8s/overlays/${{ inputs.overlay }} -n ${{ inputs.namespace }}
 
       - name: Restart and wait for analytics-api
         if: inputs.restart-analytics-api
