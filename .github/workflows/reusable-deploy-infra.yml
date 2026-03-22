@@ -51,6 +51,24 @@ jobs:
             --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Save current deployment images
+        if: inputs.apply-manifests
+        run: |
+          kubectl get deploy -n ${{ inputs.namespace }} \
+            -o jsonpath='{range .items[*]}{.metadata.name}{" "}{range .spec.template.spec.containers[*]}{.name}{" "}{.image}{"\n"}{end}{end}' \
+            > /tmp/images-before.txt || true
+
       - name: Apply manifests
         if: inputs.apply-manifests
         run: kubectl apply -k k8s/overlays/${{ inputs.overlay }} -n ${{ inputs.namespace }}
+
+      - name: Restore deployment images
+        if: inputs.apply-manifests
+        run: |
+          if [ -s /tmp/images-before.txt ]; then
+            while read -r deploy container image; do
+              [ -n "$deploy" ] && \
+                kubectl set image "deployment/$deploy" "$container=$image" \
+                  -n ${{ inputs.namespace }} || true
+            done < /tmp/images-before.txt
+          fi
