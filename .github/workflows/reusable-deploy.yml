@@ -11,8 +11,34 @@ on:
         description: "Kubernetes namespace"
         required: true
         type: string
+      tag:
+        description: "Image tag (git SHA)"
+        required: true
+        type: string
+      restart-analytics-api:
+        description: "Whether analytics-api image was rebuilt"
+        required: false
+        type: boolean
+        default: false
+      restart-web:
+        description: "Whether web image was rebuilt"
+        required: false
+        type: boolean
+        default: false
+      restart-data-sync-svc:
+        description: "Whether data-sync-svc image was rebuilt"
+        required: false
+        type: boolean
+        default: false
+      image-suffix:
+        description: "Image name suffix (empty for prod, '-test' for test)"
+        required: false
+        type: string
+        default: ""
     secrets:
       KUBE_CONFIG:
+        required: true
+      DOCKERHUB_USERNAME:
         required: true
       DB_USER:
         required: true
@@ -23,6 +49,10 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    env:
+      PREFIX: ${{ secrets.DOCKERHUB_USERNAME }}/f1-goat-determiner
+      SUFFIX: ${{ inputs.image-suffix }}
+      TAG: ${{ inputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -49,17 +79,44 @@ jobs:
             --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Update analytics-api image tag
+        if: inputs.restart-analytics-api
+        working-directory: k8s/overlays/${{ inputs.overlay }}
+        run: |
+          kustomize edit set image \
+            remsely/f1-goat-determiner-analytics-api=${PREFIX}-analytics-api${SUFFIX}:${TAG}
+
+      - name: Update web image tag
+        if: inputs.restart-web
+        working-directory: k8s/overlays/${{ inputs.overlay }}
+        run: |
+          kustomize edit set image \
+            remsely/f1-goat-determiner-web=${PREFIX}-web${SUFFIX}:${TAG}
+
+      - name: Update data-sync-svc image tag
+        if: inputs.restart-data-sync-svc
+        working-directory: k8s/overlays/${{ inputs.overlay }}
+        run: |
+          kustomize edit set image \
+            remsely/f1-goat-determiner-data-sync-svc=${PREFIX}-data-sync-svc${SUFFIX}:${TAG}
+
       - name: Apply manifests
         run: kubectl apply -k k8s/overlays/${{ inputs.overlay }}
 
-      - name: Restart deployments
+      - name: Restart and wait for analytics-api
+        if: inputs.restart-analytics-api
         run: |
           kubectl rollout restart deployment/analytics-api -n ${{ inputs.namespace }}
-          kubectl rollout restart deployment/web -n ${{ inputs.namespace }}
-          kubectl rollout restart deployment/data-sync-svc -n ${{ inputs.namespace }}
-
-      - name: Wait for rollout
-        run: |
           kubectl rollout status deployment/analytics-api -n ${{ inputs.namespace }} --timeout=120s
+
+      - name: Restart and wait for web
+        if: inputs.restart-web
+        run: |
+          kubectl rollout restart deployment/web -n ${{ inputs.namespace }}
           kubectl rollout status deployment/web -n ${{ inputs.namespace }} --timeout=120s
+
+      - name: Restart and wait for data-sync-svc
+        if: inputs.restart-data-sync-svc
+        run: |
+          kubectl rollout restart deployment/data-sync-svc -n ${{ inputs.namespace }}
           kubectl rollout status deployment/data-sync-svc -n ${{ inputs.namespace }} --timeout=120s

@@ -195,19 +195,32 @@ jobs:
     with:
       overlay: test
       namespace: test
+      tag: ${{ github.sha }}
+      restart-analytics-api: ${{ needs.analytics-api-build.result == 'success' }}
+      restart-web: ${{ needs.web-build.result == 'success' }}
+      restart-data-sync-svc: ${{ needs.data-sync-build.result == 'success' }}
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
   deploy-prod:
     name: Deploy to Production
-    needs: [ deploy-test ]
+    needs: [ detect-changes, deploy-test, analytics-api-build, web-build, data-sync-build ]
+    if: |
+      always() &&
+      needs.deploy-test.result == 'success'
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       overlay: prod
       namespace: prod
+      tag: ${{ github.sha }}
+      restart-analytics-api: ${{ needs.analytics-api-build.result == 'success' }}
+      restart-web: ${{ needs.web-build.result == 'success' }}
+      restart-data-sync-svc: ${{ needs.data-sync-build.result == 'success' }}
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}

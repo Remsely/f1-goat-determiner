@@ -50,7 +50,13 @@ jobs:
     with:
       overlay: test
       namespace: test
+      tag: ${{ github.sha }}
+      image-suffix: "-test"
+      restart-analytics-api: true
+      restart-web: true
+      restart-data-sync-svc: true
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
