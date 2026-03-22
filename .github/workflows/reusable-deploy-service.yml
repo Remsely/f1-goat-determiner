@@ -1,0 +1,54 @@
+name: Deploy Service
+
+on:
+  workflow_call:
+    inputs:
+      deployment:
+        description: "Kubernetes deployment name (e.g. analytics-api)"
+        required: true
+        type: string
+      container:
+        description: "Container name within the deployment"
+        required: true
+        type: string
+      image-name:
+        description: "Image name without registry prefix (e.g. f1-goat-determiner-analytics-api)"
+        required: true
+        type: string
+      image-tag:
+        description: "Image tag (e.g. git SHA)"
+        required: true
+        type: string
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        type: string
+    secrets:
+      KUBE_CONFIG:
+        description: "Base64-encoded kubeconfig YAML"
+        required: true
+      DOCKERHUB_USERNAME:
+        required: true
+
+jobs:
+  deploy-service:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Set image
+        run: |
+          kubectl set image deployment/${{ inputs.deployment }} \
+            ${{ inputs.container }}=${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:${{ inputs.image-tag }} \
+            -n ${{ inputs.namespace }}
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/${{ inputs.deployment }} -n ${{ inputs.namespace }} --timeout=120s

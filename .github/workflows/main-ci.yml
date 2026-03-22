@@ -78,7 +78,8 @@ jobs:
               - '.github/workflows/main-ci.yml'
             k8s:
               - 'k8s/**'
-              - '.github/workflows/reusable-deploy.yml'
+              - '.github/workflows/reusable-deploy-infra.yml'
+              - '.github/workflows/reusable-deploy-service.yml'
               - '.github/workflows/deploy-test.yml'
               - '.github/workflows/main-ci.yml'
 
@@ -182,9 +183,9 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  # === DEPLOY ===
-  deploy-test:
-    name: Deploy to Test
+  # === DEPLOY TEST ===
+  deploy-infra-test:
+    name: Deploy Infra to Test
     needs: [ detect-changes, analytics-api-build, web-build, data-sync-build ]
     if: |
       always() &&
@@ -195,36 +196,154 @@ jobs:
         needs.data-sync-build.result == 'success' ||
         needs.detect-changes.outputs.k8s == 'true'
       )
-    uses: ./.github/workflows/reusable-deploy.yml
+    uses: ./.github/workflows/reusable-deploy-infra.yml
     with:
       overlay: test
       namespace: test
-      tag: ${{ github.sha }}
-      restart-analytics-api: ${{ needs.analytics-api-build.result == 'success' }}
-      restart-web: ${{ needs.web-build.result == 'success' }}
-      restart-data-sync-svc: ${{ needs.data-sync-build.result == 'success' }}
+      apply-manifests: ${{ needs.detect-changes.outputs.k8s == 'true' }}
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
-  deploy-prod:
-    name: Deploy to Production
-    needs: [ detect-changes, deploy-test, analytics-api-build, web-build, data-sync-build ]
+  deploy-analytics-api-test:
+    name: Deploy analytics-api to Test
+    needs: [ analytics-api-build, deploy-infra-test ]
     if: |
       always() &&
-      needs.deploy-test.result == 'success'
-    uses: ./.github/workflows/reusable-deploy.yml
+      needs.analytics-api-build.result == 'success' &&
+      !contains(needs.*.result, 'failure')
+    uses: ./.github/workflows/reusable-deploy-service.yml
     with:
-      overlay: prod
-      namespace: prod
-      tag: ${{ github.sha }}
-      restart-analytics-api: ${{ needs.analytics-api-build.result == 'success' }}
-      restart-web: ${{ needs.web-build.result == 'success' }}
-      restart-data-sync-svc: ${{ needs.data-sync-build.result == 'success' }}
+      deployment: analytics-api
+      container: analytics-api
+      image-name: f1-goat-determiner-analytics-api
+      image-tag: ${{ github.sha }}
+      namespace: test
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+  deploy-web-test:
+    name: Deploy web to Test
+    needs: [ web-build, deploy-infra-test ]
+    if: |
+      always() &&
+      needs.web-build.result == 'success' &&
+      !contains(needs.*.result, 'failure')
+    uses: ./.github/workflows/reusable-deploy-service.yml
+    with:
+      deployment: web
+      container: web
+      image-name: f1-goat-determiner-web
+      image-tag: ${{ github.sha }}
+      namespace: test
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+  deploy-data-sync-test:
+    name: Deploy data-sync-svc to Test
+    needs: [ data-sync-build, deploy-infra-test ]
+    if: |
+      always() &&
+      needs.data-sync-build.result == 'success' &&
+      !contains(needs.*.result, 'failure')
+    uses: ./.github/workflows/reusable-deploy-service.yml
+    with:
+      deployment: data-sync-svc
+      container: data-sync-svc
+      image-name: f1-goat-determiner-data-sync-svc
+      image-tag: ${{ github.sha }}
+      namespace: test
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+  deploy-test-gate:
+    name: Test Deploy Gate
+    needs: [ deploy-infra-test, deploy-analytics-api-test, deploy-web-test, deploy-data-sync-test ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check deploy results
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more test deployments failed"
+            exit 1
+          fi
+          echo "All test deployments passed or were skipped"
+
+  # === DEPLOY PROD ===
+  deploy-infra-prod:
+    name: Deploy Infra to Prod
+    needs: [ detect-changes, deploy-test-gate ]
+    if: |
+      always() &&
+      needs.deploy-test-gate.result == 'success'
+    uses: ./.github/workflows/reusable-deploy-infra.yml
+    with:
+      overlay: prod
+      namespace: prod
+      apply-manifests: ${{ needs.detect-changes.outputs.k8s == 'true' }}
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+  deploy-analytics-api-prod:
+    name: Deploy analytics-api to Prod
+    needs: [ analytics-api-build, deploy-infra-prod, deploy-test-gate ]
+    if: |
+      always() &&
+      needs.analytics-api-build.result == 'success' &&
+      needs.deploy-test-gate.result == 'success' &&
+      !contains(needs.*.result, 'failure')
+    uses: ./.github/workflows/reusable-deploy-service.yml
+    with:
+      deployment: analytics-api
+      container: analytics-api
+      image-name: f1-goat-determiner-analytics-api
+      image-tag: ${{ github.sha }}
+      namespace: prod
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+  deploy-web-prod:
+    name: Deploy web to Prod
+    needs: [ web-build, deploy-infra-prod, deploy-test-gate ]
+    if: |
+      always() &&
+      needs.web-build.result == 'success' &&
+      needs.deploy-test-gate.result == 'success' &&
+      !contains(needs.*.result, 'failure')
+    uses: ./.github/workflows/reusable-deploy-service.yml
+    with:
+      deployment: web
+      container: web
+      image-name: f1-goat-determiner-web
+      image-tag: ${{ github.sha }}
+      namespace: prod
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+  deploy-data-sync-prod:
+    name: Deploy data-sync-svc to Prod
+    needs: [ data-sync-build, deploy-infra-prod, deploy-test-gate ]
+    if: |
+      always() &&
+      needs.data-sync-build.result == 'success' &&
+      needs.deploy-test-gate.result == 'success' &&
+      !contains(needs.*.result, 'failure')
+    uses: ./.github/workflows/reusable-deploy-service.yml
+    with:
+      deployment: data-sync-svc
+      container: data-sync-svc
+      image-name: f1-goat-determiner-data-sync-svc
+      image-tag: ${{ github.sha }}
+      namespace: prod
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
